@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <script>
+    // Applied before the stylesheet paints, since the module script that
+    // normally owns theming (js/theme.js) runs after HTML parsing and would
+    // otherwise flash the default theme first on every load.
+    try {
+      var themeMode = (JSON.parse(localStorage.getItem("wid_theme_v1") || "{}") || {}).mode;
+      if (themeMode) document.documentElement.dataset.theme = themeMode;
+    } catch (e) {}
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Work It Daily</title>
+  <meta name="description" content="One calisthenics exercise a day — keep your streak alive." />
+  <meta name="theme-color" content="#0b0d0f" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Icons: Font Awesome Free (CC BY 4.0) — https://fontawesome.com/license/free -->
+  <div id="app"></div>
+
+  <template id="tpl-today">
+    <header class="topbar home-topbar">
+      <h1>Work It Daily</h1>
+      <button class="icon-btn settings-btn" id="settings-btn" aria-label="Settings"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></svg></button>
+    </header>
+
+    <div id="backup-banner" class="banner hidden">
+      <p>Back up your streak before you lose it — export takes a second.</p>
+      <div class="banner-actions">
+        <button type="button" class="text-btn primary" id="backup-now-btn">Back up now</button>
+        <button type="button" class="text-btn" id="backup-dismiss-btn">Later</button>
+      </div>
+    </div>
+
+    <div class="today-scroll">
+      <div class="mascot-slot" id="mascot-slot"></div>
+
+      <div class="streak-row">
+        <div class="streak-stat">
+          <span class="streak-flame">🔥</span>
+          <span class="streak-value" id="current-streak">0</span>
+          <span class="streak-label">day streak</span>
+        </div>
+        <div class="streak-stat streak-stat-secondary">
+          <span class="streak-value" id="longest-streak">0</span>
+          <span class="streak-label">best</span>
+        </div>
+        <div class="streak-stat streak-stat-secondary">
+          <span class="streak-value" id="freeze-tokens">—</span>
+          <span class="streak-label">freeze</span>
+        </div>
+      </div>
+
+      <div class="card exercise-card" id="exercise-card">
+        <div id="challenge-banner" class="challenge-banner hidden">⭐ Weekly challenge</div>
+        <p class="exercise-category"></p>
+        <h2 class="exercise-name"></h2>
+        <p class="exercise-amount"></p>
+        <p class="exercise-description"></p>
+      </div>
+
+      <button class="text-btn primary big-btn" id="start-btn">Start today's exercise</button>
+      <div id="done-state" class="done-state hidden">
+        <p>✅ Done for today — see you tomorrow.</p>
+      </div>
+
+      <button type="button" class="badge-shelf" id="badge-shelf">
+        <span>🏅 Badges</span>
+        <span class="badge-shelf-count"></span>
+      </button>
+
+      <button type="button" class="text-btn library-link" id="library-btn">Browse exercise library →</button>
+    </div>
+  </template>
+
+  <template id="tpl-settings-menu">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Settings</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <button type="button" class="menu-item" id="instructions-btn">
+        <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+          <circle cx="256" cy="256" r="216" fill="none" stroke="currentColor" stroke-width="40" />
+          <circle cx="256" cy="176" r="28" />
+          <rect x="228" y="232" width="56" height="180" rx="12" />
+        </svg>
+        <span>Instructions</span>
+      </button>
+      <button type="button" class="menu-item" id="customize-btn">
+        <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+          <rect x="32" y="86" width="448" height="32" rx="16" />
+          <circle cx="176" cy="102" r="40" />
+          <rect x="32" y="240" width="448" height="32" rx="16" />
+          <circle cx="336" cy="256" r="40" />
+          <rect x="32" y="394" width="448" height="32" rx="16" />
+          <circle cx="256" cy="410" r="40" />
+        </svg>
+        <span>Customize</span>
+      </button>
+      <button type="button" class="menu-item" id="export-all-btn">
+        <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M384 192c53 0 96-43 96-96s-43-96-96-96-96 43-96 96c0 5.4 .5 10.8 1.3 16L159.6 184.1c-16.9-15-39.2-24.1-63.6-24.1-53 0-96 43-96 96s43 96 96 96c24.4 0 46.6-9.1 63.6-24.1L289.3 400c-.9 5.2-1.3 10.5-1.3 16 0 53 43 96 96 96s96-43 96-96-43-96-96-96c-24.4 0-46.6 9.1-63.6 24.1L190.7 272c.9-5.2 1.3-10.5 1.3-16s-.5-10.8-1.3-16l129.7-72.1c16.9 15 39.2 24.1 63.6 24.1z"/></svg>
+        <span>Export backup</span>
+      </button>
+      <button type="button" class="menu-item" id="import-btn">
+        <svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M64 0C28.7 0 0 28.7 0 64l0 240 182.1 0-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l72 72c9.4 9.4 9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-182.1 0 0 96c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-277.5c0-17-6.7-33.3-18.7-45.3L258.7 18.7C246.7 6.7 230.5 0 213.5 0L64 0zM325.5 176L232 176c-13.3 0-24-10.7-24-24L208 58.5 325.5 176z"/></svg>
+        <span>Import backup</span>
+      </button>
+    </div>
+  </template>
+
+  <template id="tpl-instructions">
+    <div class="sheet instructions-sheet">
+      <header class="sheet-header">
+        <h2>Instructions</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <div class="instructions-body">
+        <section>
+          <h3>Installing on your phone</h3>
+          <p>This is a web app, not an app-store app — add it to your Home Screen so it opens full-screen, just like a regular app.</p>
+          <p><strong>iOS (Safari):</strong> tap the Share icon, then "Add to Home Screen".</p>
+          <p><strong>Android (Chrome):</strong> tap the ⋮ menu, then "Add to Home screen" (or "Install app").</p>
+        </section>
+        <section>
+          <h3>How it works</h3>
+          <p>Every day the app picks one bodyweight exercise for you. Do it, tap done, and your streak grows. The exercise rotates automatically — no setup needed.</p>
+        </section>
+        <section>
+          <h3>Streaks &amp; freezes</h3>
+          <p>Complete an exercise every day to build your streak. Every 7-day streak earns you a <strong>streak freeze</strong> (❄, max 2 stored) — if you ever miss exactly one day, a freeze automatically bridges the gap instead of resetting you to zero.</p>
+        </section>
+        <section>
+          <h3>Weekly challenge</h3>
+          <p>Every 7th day of an active streak swaps in a harder move from the challenge pool — a little extra to mark the milestone.</p>
+        </section>
+        <section>
+          <h3>Badges</h3>
+          <p>Streak milestones, total workout counts, and trying every category all unlock badges. Tap "Badges" on the home screen to see them all.</p>
+        </section>
+        <section>
+          <h3>Your data</h3>
+          <p>Everything is stored only on this device — no account, no server. Nothing is backed up automatically, so if you switch phones or clear your browser data, your streak is gone unless you've exported it.</p>
+          <p><strong>Removing the app from your Home Screen deletes its saved data too.</strong></p>
+          <p>Use <strong>Export backup</strong> in the gear menu every so often, and <strong>Import backup</strong> to restore it. The app will remind you every couple of weeks.</p>
+        </section>
+        <section>
+          <h3>Themes</h3>
+          <p>Pick Dark, Light, or Playful from the gear menu. Playful lets you choose your own accent color too.</p>
+        </section>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-customize">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Customize</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <div class="theme-option-list">
+        <button type="button" class="theme-option" data-theme-mode="dark">
+          <span class="theme-swatch-preview dark"></span>
+          <span>Dark</span>
+        </button>
+        <button type="button" class="theme-option" data-theme-mode="light">
+          <span class="theme-swatch-preview light"></span>
+          <span>Light</span>
+        </button>
+        <button type="button" class="theme-option" data-theme-mode="playful">
+          <span class="theme-swatch-preview playful"></span>
+          <span>Playful</span>
+        </button>
+      </div>
+      <div class="playful-accent-picker hidden" id="playful-accent-picker">
+        <p class="playful-accent-label">Accent color</p>
+        <div class="swatch-row">
+          <button type="button" class="swatch-btn" data-accent="meadow" aria-label="Meadow"></button>
+          <button type="button" class="swatch-btn" data-accent="lagoon" aria-label="Lagoon"></button>
+          <button type="button" class="swatch-btn" data-accent="mint" aria-label="Mint"></button>
+          <button type="button" class="swatch-btn" data-accent="violet" aria-label="Violet"></button>
+          <button type="button" class="swatch-btn" data-accent="sunset" aria-label="Sunset"></button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-import">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Import backup</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="import-hint">Choose a Work It Daily backup file. This replaces your current streak data.</p>
+      <button type="button" class="text-btn primary import-file-btn">Choose file…</button>
+      <input type="file" accept="application/json,.json" class="import-file-input" hidden />
+      <p class="import-message" aria-live="polite"></p>
+    </div>
+  </template>
+
+  <template id="tpl-badges">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Badges</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <div class="badges-list" id="badges-list"></div>
+    </div>
+  </template>
+
+  <template id="tpl-badge-item">
+    <div class="badge-item">
+      <span class="badge-icon">🏅</span>
+      <div class="badge-text">
+        <p class="badge-label"></p>
+        <p class="badge-desc"></p>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-badge-unlock-item">
+    <div class="badge-item unlocked">
+      <span class="badge-icon">🏅</span>
+      <div class="badge-text">
+        <p class="badge-label"></p>
+        <p class="badge-desc"></p>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-player">
+    <header class="topbar player-topbar">
+      <div class="player-topbar-left">
+        <button class="icon-btn back-btn" aria-label="Exit"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+        <button class="icon-btn sound-toggle-btn" id="sound-toggle-btn" aria-label="Toggle sound"><svg class="icon" viewBox="0 0 576 512" aria-hidden="true" focusable="false"><path d="M48 352l48 0 134.1 119.2c6.4 5.7 14.6 8.8 23.1 8.8 19.2 0 34.8-15.6 34.8-34.8l0-378.4c0-19.2-15.6-34.8-34.8-34.8-8.5 0-16.7 3.1-23.1 8.8L96 160 48 160c-26.5 0-48 21.5-48 48l0 96c0 26.5 21.5 48 48 48zM367 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/></svg></button>
+      </div>
+      <span class="total-timer" id="total-timer">00:00</span>
+    </header>
+    <div class="player-stage">
+      <p class="interval-name" id="exercise-name"></p>
+      <div class="stage-display" id="stage-display">
+        <div class="countdown-ring hidden" id="countdown-ring" aria-hidden="true">
+          <svg viewBox="0 0 120 120" class="countdown-ring-svg">
+            <circle class="countdown-ring-track" cx="60" cy="60" r="54"></circle>
+            <circle class="countdown-ring-fill" id="countdown-ring-fill" cx="60" cy="60" r="54"></circle>
+          </svg>
+        </div>
+        <span class="big-number" id="big-number">–</span>
+        <span class="big-label" id="big-label"></span>
+      </div>
+    </div>
+    <div class="player-controls">
+      <button class="round-btn round-btn-lg" id="play-pause-btn" aria-label="Play or pause"><svg class="icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path d="M91.2 36.9c-12.4-6.8-27.4-6.5-39.6 .7S32 57.9 32 72l0 368c0 14.1 7.5 27.2 19.6 34.4s27.2 7.5 39.6 .7l336-184c12.8-7 20.8-20.5 20.8-35.1s-8-28.1-20.8-35.1l-336-184z"/></svg></button>
+      <button class="text-btn primary done-reps-btn hidden" id="done-btn">Done</button>
+    </div>
+  </template>
+
+  <template id="tpl-finish">
+    <div class="finish-screen">
+      <canvas id="confetti-canvas"></canvas>
+      <div class="finish-card">
+        <div class="mascot-slot" id="mascot-slot"></div>
+        <h1>Well done!</h1>
+        <p class="finish-exercise" id="finish-exercise-name"></p>
+        <div class="finish-streak-box">
+          <span class="finish-streak-flame">🔥</span>
+          <span class="finish-streak-value" id="finish-streak">0</span>
+          <span class="finish-streak-label" id="finish-streak-label">day streak</span>
+        </div>
+        <p id="new-record" class="finish-record hidden">🏆 New longest streak!</p>
+        <p id="freeze-used" class="finish-freeze hidden">❄ A streak freeze covered your missed day.</p>
+        <div id="badge-unlock-section" class="badge-unlock-section hidden">
+          <p class="badge-unlock-title">Badge unlocked!</p>
+          <div id="badge-unlock-list"></div>
+        </div>
+        <button class="text-btn primary" id="done-btn">Back to today</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-library">
+    <header class="topbar">
+      <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
+      <h1>Exercise Library</h1>
+    </header>
+    <div class="library-list" id="library-list"></div>
+  </template>
+
+  <template id="tpl-library-section">
+    <section class="library-section">
+      <h2 class="library-section-title"></h2>
+      <p class="library-section-blurb"></p>
+      <div class="library-section-items"></div>
+    </section>
+  </template>
+
+  <template id="tpl-library-item">
+    <button class="card drawer-item">
+      <span class="card-title"></span>
+      <span class="card-meta"></span>
+    </button>
+  </template>
+
+  <template id="tpl-exercise-detail">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2 class="exercise-detail-name"></h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="card-meta exercise-detail-meta"></p>
+      <p class="exercise-detail-desc"></p>
+    </div>
+  </template>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
