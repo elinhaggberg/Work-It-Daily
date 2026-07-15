@@ -486,6 +486,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .badge-unlock-title { font-weight: 700; margin: 0 0 8px; }
 .badge-unlock-section .badge-item { margin-bottom: 8px; background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
 .finish-card .text-btn.primary { margin-top: 12px; width: 100%; padding: 14px; }
+.finish-card .text-btn:not(.primary) { width: 100%; color: var(--text-dim); }
 
 /* Library */
 .library-list {

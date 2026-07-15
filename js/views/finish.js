@@ -1,6 +1,19 @@
 import { launchConfetti } from "../confetti.js";
 import { renderMascot } from "../mascot.js";
 import { getTheme, PLAYFUL_SWATCHES } from "../theme.js";
+import { formatDate } from "../util.js";
+
+function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze }) {
+  const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
+  const lines = [
+    `Work It Daily — ${formatDate(Date.now())}`,
+    `${exercise.name} (${amount})`,
+    `🔥 ${progress.currentStreak} day streak (best: ${progress.longestStreak})`,
+  ];
+  if (usedFreeze) lines.push("❄ A streak freeze covered a missed day");
+  for (const badge of newlyUnlocked) lines.push(`🏅 Badge unlocked: ${badge.label} (${badge.desc})`);
+  return lines.join("\n");
+}
 
 export function renderFinish(root, nav, result) {
   const { exercise, progress, newlyUnlocked, usedFreeze } = result;
@@ -41,6 +54,19 @@ export function renderFinish(root, nav, result) {
   } else {
     badgeSection.classList.add("hidden");
   }
+
+  const summaryText = buildSummaryText(result);
+  const copyBtn = root.querySelector("#copy-btn");
+  copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(summaryText);
+      copyBtn.textContent = "Copied ✓";
+      setTimeout(() => (copyBtn.textContent = "Copy summary"), 1600);
+    } catch {
+      copyBtn.textContent = "Couldn't copy";
+      setTimeout(() => (copyBtn.textContent = "Copy summary"), 1600);
+    }
+  });
 
   root.querySelector("#done-btn").addEventListener("click", () => nav.toToday());
 }
