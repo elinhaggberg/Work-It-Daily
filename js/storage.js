@@ -35,18 +35,59 @@ function addDays(dateKey, n) {
 const FREEZE_TOKEN_CAP = 2;
 const FREEZE_TOKEN_EVERY = 7; // earn one every N-day streak milestone
 
-export const BADGES = [
-  { id: "streak-3", label: "First Steps", desc: "3-day streak", kind: "streak", threshold: 3 },
-  { id: "streak-7", label: "One Week Strong", desc: "7-day streak", kind: "streak", threshold: 7 },
-  { id: "streak-14", label: "Two Weeks In", desc: "14-day streak", kind: "streak", threshold: 14 },
-  { id: "streak-30", label: "Habit Formed", desc: "30-day streak", kind: "streak", threshold: 30 },
-  { id: "streak-60", label: "Two Months", desc: "60-day streak", kind: "streak", threshold: 60 },
-  { id: "streak-100", label: "Century", desc: "100-day streak", kind: "streak", threshold: 100 },
-  { id: "streak-365", label: "One Year", desc: "365-day streak", kind: "streak", threshold: 365 },
-  { id: "total-50", label: "Half Century", desc: "50 workouts completed", kind: "total", threshold: 50 },
-  { id: "total-200", label: "Dedicated", desc: "200 workouts completed", kind: "total", threshold: 200 },
-  { id: "variety", label: "Well Rounded", desc: "Completed every category", kind: "variety" },
+// Three tiers, each fancier than the last. Medals cover the first year or so
+// of normal use; Cups mark each full year of an active streak; Elite badges
+// are long-haul milestones for users who keep going well past year one.
+export const BADGE_TIERS = [
+  { id: "medal", label: "Badges", icon: "🏅" },
+  { id: "cup", label: "Cups", icon: "🏆" },
+  { id: "elite", label: "Elite", icon: "💎" },
 ];
+
+export const BADGES = [
+  // Medals
+  { id: "streak-3", tier: "medal", label: "First Steps", desc: "3-day streak", kind: "streak", threshold: 3 },
+  { id: "streak-7", tier: "medal", label: "One Week Strong", desc: "7-day streak", kind: "streak", threshold: 7 },
+  { id: "streak-14", tier: "medal", label: "Two Weeks In", desc: "14-day streak", kind: "streak", threshold: 14 },
+  { id: "streak-30", tier: "medal", label: "Habit Formed", desc: "30-day streak", kind: "streak", threshold: 30 },
+  { id: "streak-60", tier: "medal", label: "Two Months", desc: "60-day streak", kind: "streak", threshold: 60 },
+  { id: "streak-100", tier: "medal", label: "Century", desc: "100-day streak", kind: "streak", threshold: 100 },
+  { id: "streak-365", tier: "medal", label: "One Year", desc: "365-day streak", kind: "streak", threshold: 365 },
+  { id: "total-50", tier: "medal", label: "Half Century", desc: "50 workouts completed", kind: "total", threshold: 50 },
+  { id: "total-200", tier: "medal", label: "Dedicated", desc: "200 workouts completed", kind: "total", threshold: 200 },
+  { id: "variety", tier: "medal", label: "Well Rounded", desc: "Completed every category", kind: "variety" },
+
+  // Cups — one per full year of an active streak
+  { id: "cup-1", tier: "cup", label: "1 Year Cup", desc: "365-day streak", kind: "streak", threshold: 365 },
+  { id: "cup-2", tier: "cup", label: "2 Year Cup", desc: "730-day streak", kind: "streak", threshold: 730 },
+  { id: "cup-3", tier: "cup", label: "3 Year Cup", desc: "1095-day streak", kind: "streak", threshold: 1095 },
+  { id: "cup-4", tier: "cup", label: "4 Year Cup", desc: "1460-day streak", kind: "streak", threshold: 1460 },
+  { id: "cup-5", tier: "cup", label: "5 Year Cup", desc: "1825-day streak", kind: "streak", threshold: 1825 },
+
+  // Elite — for the truly long haul
+  { id: "elite-500", tier: "elite", label: "Iron Will", desc: "500-day streak", kind: "streak", threshold: 500 },
+  { id: "elite-1000", tier: "elite", label: "Unbreakable", desc: "1000-day streak", kind: "streak", threshold: 1000 },
+  { id: "elite-1500", tier: "elite", label: "Legend", desc: "1500-day streak", kind: "streak", threshold: 1500 },
+  { id: "elite-2000", tier: "elite", label: "Mythic", desc: "2000-day streak", kind: "streak", threshold: 2000 },
+  { id: "elite-total-1000", tier: "elite", label: "Iron Body", desc: "1000 workouts completed", kind: "total", threshold: 1000 },
+];
+
+// The home screen's badge counter tracks whichever tier isn't finished yet —
+// once Medals hit 10/10 it "graduates" to counting Cups, then Elite. Nothing
+// already earned is ever hidden or revoked; this only changes what the
+// compact home-screen counter highlights next.
+export function getActiveBadgeTier(unlockedBadges) {
+  for (const tier of BADGE_TIERS) {
+    const tierBadges = BADGES.filter((b) => b.tier === tier.id);
+    const unlocked = tierBadges.filter((b) => unlockedBadges.includes(b.id)).length;
+    if (unlocked < tierBadges.length) {
+      return { ...tier, unlocked, total: tierBadges.length };
+    }
+  }
+  const last = BADGE_TIERS[BADGE_TIERS.length - 1];
+  const total = BADGES.filter((b) => b.tier === last.id).length;
+  return { ...last, unlocked: total, total };
+}
 
 function defaultProgress() {
   return {

@@ -2,6 +2,11 @@ import { launchConfetti } from "../confetti.js";
 import { renderMascot } from "../mascot.js";
 import { getTheme, PLAYFUL_SWATCHES } from "../theme.js";
 import { formatDate } from "../util.js";
+import { BADGE_TIERS } from "../storage.js";
+
+function tierIcon(badge) {
+  return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
+}
 
 function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze }) {
   const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
@@ -11,7 +16,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze }) {
     `🔥 ${progress.currentStreak} day streak (best: ${progress.longestStreak})`,
   ];
   if (usedFreeze) lines.push("❄ A streak freeze covered a missed day");
-  for (const badge of newlyUnlocked) lines.push(`🏅 Badge unlocked: ${badge.label} (${badge.desc})`);
+  for (const badge of newlyUnlocked) lines.push(`${tierIcon(badge)} Badge unlocked: ${badge.label} (${badge.desc})`);
   return lines.join("\n");
 }
 
@@ -45,6 +50,8 @@ export function renderFinish(root, nav, result) {
     const itemTpl = document.getElementById("tpl-badge-unlock-item");
     const nodes = newlyUnlocked.map((badge) => {
       const node = itemTpl.content.cloneNode(true);
+      node.querySelector(".badge-item").classList.add(`tier-${badge.tier}`);
+      node.querySelector(".badge-icon").textContent = tierIcon(badge);
       node.querySelector(".badge-label").textContent = badge.label;
       node.querySelector(".badge-desc").textContent = badge.desc;
       return node;

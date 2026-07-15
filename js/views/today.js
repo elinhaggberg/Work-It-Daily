@@ -1,6 +1,8 @@
 import {
   getTodayStatus,
   BADGES,
+  BADGE_TIERS,
+  getActiveBadgeTier,
   exportBackupData,
   importBackupData,
   markBackedUp,
@@ -99,8 +101,9 @@ export function renderToday(root, nav) {
 
   function renderBadgeShelf(root) {
     const shelf = root.querySelector("#badge-shelf");
-    const unlocked = BADGES.filter((b) => progress.unlockedBadges.includes(b.id));
-    shelf.querySelector(".badge-shelf-count").textContent = `${unlocked.length}/${BADGES.length}`;
+    const active = getActiveBadgeTier(progress.unlockedBadges);
+    shelf.querySelector(".badge-shelf-label").textContent = `${active.icon} ${active.label}`;
+    shelf.querySelector(".badge-shelf-count").textContent = `${active.unlocked}/${active.total}`;
   }
 
   function openSettingsMenu() {
@@ -233,16 +236,31 @@ export function renderToday(root, nav) {
     const sheet = openSheet("tpl-badges");
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
     const list = sheet.el.querySelector("#badges-list");
+    const sectionTpl = document.getElementById("tpl-badge-tier-section");
     const itemTpl = document.getElementById("tpl-badge-item");
-    const nodes = BADGES.map((badge) => {
-      const node = itemTpl.content.cloneNode(true);
-      const unlocked = progress.unlockedBadges.includes(badge.id);
-      const item = node.querySelector(".badge-item");
-      item.classList.toggle("locked", !unlocked);
-      node.querySelector(".badge-label").textContent = badge.label;
-      node.querySelector(".badge-desc").textContent = badge.desc;
-      return node;
+
+    const sections = BADGE_TIERS.map((tier) => {
+      const tierBadges = BADGES.filter((b) => b.tier === tier.id);
+      const unlockedCount = tierBadges.filter((b) => progress.unlockedBadges.includes(b.id)).length;
+
+      const section = sectionTpl.content.cloneNode(true);
+      section.querySelector(".badge-tier-title").textContent = `${tier.icon} ${tier.label}`;
+      section.querySelector(".badge-tier-count").textContent = `${unlockedCount}/${tierBadges.length}`;
+
+      const items = tierBadges.map((badge) => {
+        const node = itemTpl.content.cloneNode(true);
+        const unlocked = progress.unlockedBadges.includes(badge.id);
+        const item = node.querySelector(".badge-item");
+        item.classList.add(`tier-${tier.id}`);
+        item.classList.toggle("locked", !unlocked);
+        node.querySelector(".badge-icon").textContent = tier.icon;
+        node.querySelector(".badge-label").textContent = badge.label;
+        node.querySelector(".badge-desc").textContent = badge.desc;
+        return node;
+      });
+      section.querySelector(".badge-tier-items").replaceChildren(...items);
+      return section;
     });
-    list.replaceChildren(...nodes);
+    list.replaceChildren(...sections);
   }
 }

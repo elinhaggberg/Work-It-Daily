@@ -414,7 +414,14 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .import-message.error { color: var(--danger); }
 
 /* Badges */
-.badges-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+.badges-list { display: flex; flex-direction: column; padding-bottom: 8px; }
+.badge-tier-section { margin-bottom: 20px; }
+.badge-tier-section:last-child { margin-bottom: 4px; }
+.badge-tier-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.badge-tier-title { font-size: 1rem; }
+.badge-tier-count { font-size: 0.85rem; color: var(--text-dim); font-weight: 600; }
+.badge-tier-items { display: flex; flex-direction: column; gap: 8px; }
+
 .badge-item {
   display: flex;
   align-items: center;
@@ -422,11 +429,32 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   padding: 12px 14px;
   border-radius: 12px;
   background: var(--surface-2);
+  border: 1px solid transparent;
 }
 .badge-item.locked { opacity: 0.4; filter: grayscale(1); }
 .badge-icon { font-size: 1.6rem; }
 .badge-label { margin: 0; font-weight: 700; }
 .badge-desc { margin: 2px 0 0; font-size: 0.82rem; color: var(--text-dim); }
+
+/* Cups and Elite badges get fancier, tier-colored treatment once unlocked. */
+.badge-item.tier-cup:not(.locked) {
+  background: linear-gradient(135deg, color-mix(in srgb, #f5b942 24%, var(--surface-2)), color-mix(in srgb, #f5b942 6%, var(--surface-2)));
+  border-color: color-mix(in srgb, #f5b942 45%, transparent);
+}
+.badge-item.tier-cup:not(.locked) .badge-icon { filter: drop-shadow(0 0 4px color-mix(in srgb, #f5b942 65%, transparent)); }
+.badge-item.tier-cup:not(.locked) .badge-label { color: #f5b942; }
+
+.badge-item.tier-elite:not(.locked) {
+  background: linear-gradient(135deg, color-mix(in srgb, #a78bfa 26%, var(--surface-2)), color-mix(in srgb, #38bdf8 16%, var(--surface-2)));
+  border-color: color-mix(in srgb, #a78bfa 50%, transparent);
+}
+.badge-item.tier-elite:not(.locked) .badge-icon { filter: drop-shadow(0 0 5px color-mix(in srgb, #a78bfa 75%, transparent)); }
+.badge-item.tier-elite:not(.locked) .badge-label {
+  background: linear-gradient(90deg, #a78bfa, #38bdf8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
 /* Player */
 .player-topbar { justify-content: space-between; }

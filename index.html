@@ -76,7 +76,7 @@
       </div>
 
       <button type="button" class="badge-shelf" id="badge-shelf">
-        <span>🏅 Badges</span>
+        <span class="badge-shelf-label">🏅 Badges</span>
         <span class="badge-shelf-count"></span>
       </button>
 
@@ -291,6 +291,16 @@
       </header>
       <div class="badges-list" id="badges-list"></div>
     </div>
+  </template>
+
+  <template id="tpl-badge-tier-section">
+    <section class="badge-tier-section">
+      <div class="badge-tier-header">
+        <h3 class="badge-tier-title"></h3>
+        <span class="badge-tier-count"></span>
+      </div>
+      <div class="badge-tier-items"></div>
+    </section>
   </template>
 
   <template id="tpl-badge-item">
