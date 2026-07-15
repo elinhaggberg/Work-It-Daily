@@ -199,3 +199,11 @@ export function getThemePref() {
 export function setThemePref(pref) {
   writeJSON(THEME_KEY, pref);
 }
+
+// Wipes every trace of this app's data — streaks, badges, backup timestamps,
+// theme and sound prefs — back to a fresh install.
+export function resetAllData() {
+  localStorage.removeItem(PROGRESS_KEY);
+  localStorage.removeItem(THEME_KEY);
+  localStorage.removeItem(SOUND_KEY);
+}

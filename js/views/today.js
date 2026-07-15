@@ -6,12 +6,13 @@ import {
   markBackedUp,
   dismissBackupBanner,
   shouldShowBackupBanner,
+  resetAllData,
 } from "../storage.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
 import { shareOrDownload, filenameFor } from "../share.js";
-import { getTheme, setTheme } from "../theme.js";
+import { getTheme, setTheme, applyTheme } from "../theme.js";
 import { unlockAudio } from "../audio.js";
 
 export function renderToday(root, nav) {
@@ -102,6 +103,21 @@ export function renderToday(root, nav) {
     sheet.el.querySelector("#import-btn").addEventListener("click", () => {
       sheet.close();
       openImport();
+    });
+    sheet.el.querySelector("#delete-all-btn").addEventListener("click", () => {
+      sheet.close();
+      openDeleteAllConfirm();
+    });
+  }
+
+  function openDeleteAllConfirm() {
+    const sheet = openSheet("tpl-confirm-delete-all");
+    sheet.el.querySelector(".cancel-btn").addEventListener("click", () => sheet.close());
+    sheet.el.querySelector(".confirm-btn").addEventListener("click", () => {
+      resetAllData();
+      applyTheme();
+      sheet.close();
+      renderToday(root, nav);
     });
   }
 
