@@ -35,28 +35,23 @@ function addDays(dateKey, n) {
 const FREEZE_TOKEN_CAP = 2;
 const FREEZE_TOKEN_EVERY = 7; // earn one every N-day streak milestone
 
-// Three tiers, each fancier than the last. Medals are a fixed, finite set
-// covering the first year of normal use. Cups and Elite badges are generated
-// from the current streak/total rather than a hardcoded list, so there's
-// always a next one waiting no matter how many years someone keeps going —
-// instead of the gamification going quiet after year one.
+// Four tiers, each fancier (and rarer) than the last. Milestones, Cups, and
+// Elite badges are all generated from the current streak/total rather than
+// a hardcoded list, so there's always a next one waiting no matter how many
+// years someone keeps going. Bonus is the only fixed, one-time set.
 export const BADGE_TIERS = [
-  { id: "medal", label: "Badges", icon: "🏅" },
+  { id: "milestone", label: "Milestones", icon: "🎖️" },
   { id: "cup", label: "Cups", icon: "🏆" },
   { id: "elite", label: "Elite", icon: "💎" },
+  { id: "bonus", label: "Bonus", icon: "🏅" },
 ];
 
+// One-time extras — not tied to the yearly rhythm, so they don't need to be
+// perpetual the way Milestones/Cups/Elite do.
 export const BADGES = [
-  { id: "streak-3", tier: "medal", label: "First Steps", desc: "3-day streak", kind: "streak", threshold: 3 },
-  { id: "streak-7", tier: "medal", label: "One Week Strong", desc: "7-day streak", kind: "streak", threshold: 7 },
-  { id: "streak-14", tier: "medal", label: "Two Weeks In", desc: "14-day streak", kind: "streak", threshold: 14 },
-  { id: "streak-30", tier: "medal", label: "Habit Formed", desc: "30-day streak", kind: "streak", threshold: 30 },
-  { id: "streak-60", tier: "medal", label: "Two Months", desc: "60-day streak", kind: "streak", threshold: 60 },
-  { id: "streak-100", tier: "medal", label: "Century", desc: "100-day streak", kind: "streak", threshold: 100 },
-  { id: "streak-365", tier: "medal", label: "One Year", desc: "365-day streak", kind: "streak", threshold: 365 },
-  { id: "total-50", tier: "medal", label: "Half Century", desc: "50 workouts completed", kind: "total", threshold: 50 },
-  { id: "total-200", tier: "medal", label: "Dedicated", desc: "200 workouts completed", kind: "total", threshold: 200 },
-  { id: "variety", tier: "medal", label: "Well Rounded", desc: "Completed every category", kind: "variety" },
+  { id: "total-50", tier: "bonus", label: "Half Century", desc: "50 workouts completed", kind: "total", threshold: 50 },
+  { id: "total-200", tier: "bonus", label: "Dedicated", desc: "200 workouts completed", kind: "total", threshold: 200 },
+  { id: "variety", tier: "bonus", label: "Well Rounded", desc: "Completed every category", kind: "variety" },
 ];
 
 const CUP_INTERVAL_DAYS = 365; // one Cup per full year of streak, forever
@@ -68,6 +63,45 @@ const ELITE_TOTAL_INTERVAL = 1000; // an Elite badge every 1000 workouts, foreve
 // sequence never runs out of things to call itself.
 const ELITE_STREAK_NAMES = ["Iron Will", "Unbreakable", "Legend", "Mythic", "Titan", "Eternal", "Immortal", "Transcendent"];
 const ELITE_TOTAL_NAMES = ["Iron Body", "Forged", "Relentless"];
+
+// Nine within-year checkpoints, spaced the way the original one-time medal
+// set was (dense early, spreading out later), reused every year so there's
+// always a short-term goal a few weeks out — not just one big payoff at the
+// end of the year. The Cup at day 365 rounds each year out to exactly 10.
+export const MILESTONE_OFFSETS = [
+  { days: 3, name: "Quick Start" },
+  { days: 7, name: "One Week In" },
+  { days: 14, name: "Two Weeks Strong" },
+  { days: 30, name: "One Month In" },
+  { days: 60, name: "Two Months In" },
+  { days: 100, name: "Century Mark" },
+  { days: 150, name: "Halfway Through" },
+  { days: 250, name: "Home Stretch" },
+  { days: 300, name: "Final Push" },
+];
+
+// Generates every Milestone badge for every year up through the one
+// currently in progress (plus `extraYears` more for a sheet preview), so a
+// fresh batch of 9 becomes available right as each new year starts instead
+// of the streak-badge rhythm only ever happening once.
+function generateMilestoneBadges(longestStreak, extraYears = 0) {
+  const yearsToGenerate = Math.floor(longestStreak / CUP_INTERVAL_DAYS) + 1 + extraYears;
+  const badges = [];
+  for (let year = 1; year <= yearsToGenerate; year++) {
+    for (const offset of MILESTONE_OFFSETS) {
+      const threshold = (year - 1) * CUP_INTERVAL_DAYS + offset.days;
+      badges.push({
+        id: `milestone-${threshold}`,
+        tier: "milestone",
+        label: `${offset.name} · Year ${year}`,
+        desc: `${threshold}-day streak`,
+        kind: "streak",
+        threshold,
+      });
+    }
+  }
+  return badges;
+}
 
 // Generates every badge in a perpetual, interval-based sequence up through
 // the highest one achieved so far, plus `lookahead` more still-locked ones —
@@ -106,28 +140,33 @@ function generateEliteTotalBadges(totalCompleted, lookahead = 1) {
   return badges;
 }
 
-// The full set of badges relevant right now: the fixed Medals plus every
-// Cup/Elite badge generated up through what's achievable, with a small
-// lookahead so the sheet can preview upcoming ones.
+// The full set of badges relevant right now: the fixed Bonus set plus every
+// Milestone/Cup/Elite badge generated up through what's achievable, with a
+// small lookahead so the sheet can preview upcoming ones.
 export function getAllBadges(longestStreak, totalCompleted, lookahead = 1) {
+  // Milestones already generate 9 per year, so previewing extra years ahead
+  // at the same lookahead as Cups/Elite would pile on dozens of locked
+  // entries — capped at 1 extra year regardless of what's passed in.
+  const milestoneLookahead = Math.min(lookahead, 1);
   return [
     ...BADGES,
+    ...generateMilestoneBadges(longestStreak, milestoneLookahead),
     ...generateCupBadges(longestStreak, lookahead),
     ...generateEliteStreakBadges(longestStreak, lookahead),
     ...generateEliteTotalBadges(totalCompleted, lookahead),
   ];
 }
 
-// The home screen's compact badge counter shows Medal progress (X/10) until
-// that's maxed out, then switches to an open-ended trophy count instead of
-// freezing at a permanent "10/10" — there's no ceiling to hit anymore.
-export function getBadgeShelfInfo(unlockedBadges) {
-  const medalUnlocked = BADGES.filter((b) => unlockedBadges.includes(b.id)).length;
-  if (medalUnlocked < BADGES.length) {
-    return { icon: "🏅", label: "Badges", countText: `${medalUnlocked}/${BADGES.length}` };
-  }
-  const trophyCount = unlockedBadges.filter((id) => id.startsWith("cup-") || id.startsWith("elite-")).length;
-  return { icon: "🏆", label: "Trophy case", countText: `${trophyCount}` };
+// The home screen's compact badge counter tracks Milestones for whichever
+// year of the streak is currently in progress — it genuinely resets to
+// 0/9 at the start of every new year (nothing earned is lost; last year's
+// milestones stay visible in the full Badges sheet), so there's always a
+// short-term goal a few weeks out, indefinitely.
+export function getMilestoneShelfInfo(longestStreak, unlockedBadges) {
+  const year = Math.floor(longestStreak / CUP_INTERVAL_DAYS) + 1;
+  const yearIds = MILESTONE_OFFSETS.map((o) => `milestone-${(year - 1) * CUP_INTERVAL_DAYS + o.days}`);
+  const unlocked = yearIds.filter((id) => unlockedBadges.includes(id)).length;
+  return { icon: "🎖️", label: `Year ${year} Milestones`, countText: `${unlocked}/${MILESTONE_OFFSETS.length}` };
 }
 
 function defaultProgress() {

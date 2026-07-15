@@ -2,7 +2,7 @@ import {
   getTodayStatus,
   BADGE_TIERS,
   getAllBadges,
-  getBadgeShelfInfo,
+  getMilestoneShelfInfo,
   exportBackupData,
   importBackupData,
   markBackedUp,
@@ -101,7 +101,7 @@ export function renderToday(root, nav) {
 
   function renderBadgeShelf(root) {
     const shelf = root.querySelector("#badge-shelf");
-    const info = getBadgeShelfInfo(progress.unlockedBadges);
+    const info = getMilestoneShelfInfo(progress.longestStreak, progress.unlockedBadges);
     shelf.querySelector(".badge-shelf-label").textContent = `${info.icon} ${info.label}`;
     shelf.querySelector(".badge-shelf-count").textContent = info.countText;
   }
