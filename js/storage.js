@@ -35,9 +35,11 @@ function addDays(dateKey, n) {
 const FREEZE_TOKEN_CAP = 2;
 const FREEZE_TOKEN_EVERY = 7; // earn one every N-day streak milestone
 
-// Three tiers, each fancier than the last. Medals cover the first year or so
-// of normal use; Cups mark each full year of an active streak; Elite badges
-// are long-haul milestones for users who keep going well past year one.
+// Three tiers, each fancier than the last. Medals are a fixed, finite set
+// covering the first year of normal use. Cups and Elite badges are generated
+// from the current streak/total rather than a hardcoded list, so there's
+// always a next one waiting no matter how many years someone keeps going —
+// instead of the gamification going quiet after year one.
 export const BADGE_TIERS = [
   { id: "medal", label: "Badges", icon: "🏅" },
   { id: "cup", label: "Cups", icon: "🏆" },
@@ -45,7 +47,6 @@ export const BADGE_TIERS = [
 ];
 
 export const BADGES = [
-  // Medals
   { id: "streak-3", tier: "medal", label: "First Steps", desc: "3-day streak", kind: "streak", threshold: 3 },
   { id: "streak-7", tier: "medal", label: "One Week Strong", desc: "7-day streak", kind: "streak", threshold: 7 },
   { id: "streak-14", tier: "medal", label: "Two Weeks In", desc: "14-day streak", kind: "streak", threshold: 14 },
@@ -56,37 +57,77 @@ export const BADGES = [
   { id: "total-50", tier: "medal", label: "Half Century", desc: "50 workouts completed", kind: "total", threshold: 50 },
   { id: "total-200", tier: "medal", label: "Dedicated", desc: "200 workouts completed", kind: "total", threshold: 200 },
   { id: "variety", tier: "medal", label: "Well Rounded", desc: "Completed every category", kind: "variety" },
-
-  // Cups — one per full year of an active streak
-  { id: "cup-1", tier: "cup", label: "1 Year Cup", desc: "365-day streak", kind: "streak", threshold: 365 },
-  { id: "cup-2", tier: "cup", label: "2 Year Cup", desc: "730-day streak", kind: "streak", threshold: 730 },
-  { id: "cup-3", tier: "cup", label: "3 Year Cup", desc: "1095-day streak", kind: "streak", threshold: 1095 },
-  { id: "cup-4", tier: "cup", label: "4 Year Cup", desc: "1460-day streak", kind: "streak", threshold: 1460 },
-  { id: "cup-5", tier: "cup", label: "5 Year Cup", desc: "1825-day streak", kind: "streak", threshold: 1825 },
-
-  // Elite — for the truly long haul
-  { id: "elite-500", tier: "elite", label: "Iron Will", desc: "500-day streak", kind: "streak", threshold: 500 },
-  { id: "elite-1000", tier: "elite", label: "Unbreakable", desc: "1000-day streak", kind: "streak", threshold: 1000 },
-  { id: "elite-1500", tier: "elite", label: "Legend", desc: "1500-day streak", kind: "streak", threshold: 1500 },
-  { id: "elite-2000", tier: "elite", label: "Mythic", desc: "2000-day streak", kind: "streak", threshold: 2000 },
-  { id: "elite-total-1000", tier: "elite", label: "Iron Body", desc: "1000 workouts completed", kind: "total", threshold: 1000 },
 ];
 
-// The home screen's badge counter tracks whichever tier isn't finished yet —
-// once Medals hit 10/10 it "graduates" to counting Cups, then Elite. Nothing
-// already earned is ever hidden or revoked; this only changes what the
-// compact home-screen counter highlights next.
-export function getActiveBadgeTier(unlockedBadges) {
-  for (const tier of BADGE_TIERS) {
-    const tierBadges = BADGES.filter((b) => b.tier === tier.id);
-    const unlocked = tierBadges.filter((b) => unlockedBadges.includes(b.id)).length;
-    if (unlocked < tierBadges.length) {
-      return { ...tier, unlocked, total: tierBadges.length };
-    }
+const CUP_INTERVAL_DAYS = 365; // one Cup per full year of streak, forever
+const ELITE_STREAK_INTERVAL_DAYS = 500; // an Elite streak badge every 500 days, forever
+const ELITE_TOTAL_INTERVAL = 1000; // an Elite badge every 1000 workouts, forever
+
+// A handful of curated names for the badges most people will actually reach;
+// falls back to a plain "{n}-Day Streak" style label past that so the
+// sequence never runs out of things to call itself.
+const ELITE_STREAK_NAMES = ["Iron Will", "Unbreakable", "Legend", "Mythic", "Titan", "Eternal", "Immortal", "Transcendent"];
+const ELITE_TOTAL_NAMES = ["Iron Body", "Forged", "Relentless"];
+
+// Generates every badge in a perpetual, interval-based sequence up through
+// the highest one achieved so far, plus `lookahead` more still-locked ones —
+// so the badges sheet always previews what's coming next instead of the
+// list quietly ending. `lookahead` of 1 (the default) is enough for the
+// unlock check itself to catch a threshold the instant it's crossed.
+function generateCupBadges(longestStreak, lookahead = 1) {
+  const achieved = Math.floor(longestStreak / CUP_INTERVAL_DAYS);
+  const badges = [];
+  for (let n = 1; n <= achieved + lookahead; n++) {
+    const threshold = n * CUP_INTERVAL_DAYS;
+    badges.push({ id: `cup-${n}`, tier: "cup", label: `${n} Year Cup`, desc: `${threshold}-day streak`, kind: "streak", threshold });
   }
-  const last = BADGE_TIERS[BADGE_TIERS.length - 1];
-  const total = BADGES.filter((b) => b.tier === last.id).length;
-  return { ...last, unlocked: total, total };
+  return badges;
+}
+
+function generateEliteStreakBadges(longestStreak, lookahead = 1) {
+  const achieved = Math.floor(longestStreak / ELITE_STREAK_INTERVAL_DAYS);
+  const badges = [];
+  for (let n = 1; n <= achieved + lookahead; n++) {
+    const threshold = n * ELITE_STREAK_INTERVAL_DAYS;
+    const label = ELITE_STREAK_NAMES[n - 1] || `${threshold}-Day Streak`;
+    badges.push({ id: `elite-${threshold}`, tier: "elite", label, desc: `${threshold}-day streak`, kind: "streak", threshold });
+  }
+  return badges;
+}
+
+function generateEliteTotalBadges(totalCompleted, lookahead = 1) {
+  const achieved = Math.floor(totalCompleted / ELITE_TOTAL_INTERVAL);
+  const badges = [];
+  for (let n = 1; n <= achieved + lookahead; n++) {
+    const threshold = n * ELITE_TOTAL_INTERVAL;
+    const label = ELITE_TOTAL_NAMES[n - 1] || `${threshold} Workouts`;
+    badges.push({ id: `elite-total-${threshold}`, tier: "elite", label, desc: `${threshold} workouts completed`, kind: "total", threshold });
+  }
+  return badges;
+}
+
+// The full set of badges relevant right now: the fixed Medals plus every
+// Cup/Elite badge generated up through what's achievable, with a small
+// lookahead so the sheet can preview upcoming ones.
+export function getAllBadges(longestStreak, totalCompleted, lookahead = 1) {
+  return [
+    ...BADGES,
+    ...generateCupBadges(longestStreak, lookahead),
+    ...generateEliteStreakBadges(longestStreak, lookahead),
+    ...generateEliteTotalBadges(totalCompleted, lookahead),
+  ];
+}
+
+// The home screen's compact badge counter shows Medal progress (X/10) until
+// that's maxed out, then switches to an open-ended trophy count instead of
+// freezing at a permanent "10/10" — there's no ceiling to hit anymore.
+export function getBadgeShelfInfo(unlockedBadges) {
+  const medalUnlocked = BADGES.filter((b) => unlockedBadges.includes(b.id)).length;
+  if (medalUnlocked < BADGES.length) {
+    return { icon: "🏅", label: "Badges", countText: `${medalUnlocked}/${BADGES.length}` };
+  }
+  const trophyCount = unlockedBadges.filter((id) => id.startsWith("cup-") || id.startsWith("elite-")).length;
+  return { icon: "🏆", label: "Trophy case", countText: `${trophyCount}` };
 }
 
 function defaultProgress() {
@@ -173,7 +214,8 @@ function hasAllCategories(completions) {
 // unlocks any newly-earned ones (mutates progress.unlockedBadges in place).
 function checkForNewBadges(progress, stats) {
   const newlyUnlocked = [];
-  for (const badge of BADGES) {
+  const candidates = getAllBadges(stats.currentStreak, progress.completions.length, 1);
+  for (const badge of candidates) {
     if (progress.unlockedBadges.includes(badge.id)) continue;
     const earned =
       (badge.kind === "streak" && stats.currentStreak >= badge.threshold) ||

@@ -1,8 +1,8 @@
 import {
   getTodayStatus,
-  BADGES,
   BADGE_TIERS,
-  getActiveBadgeTier,
+  getAllBadges,
+  getBadgeShelfInfo,
   exportBackupData,
   importBackupData,
   markBackedUp,
@@ -101,9 +101,9 @@ export function renderToday(root, nav) {
 
   function renderBadgeShelf(root) {
     const shelf = root.querySelector("#badge-shelf");
-    const active = getActiveBadgeTier(progress.unlockedBadges);
-    shelf.querySelector(".badge-shelf-label").textContent = `${active.icon} ${active.label}`;
-    shelf.querySelector(".badge-shelf-count").textContent = `${active.unlocked}/${active.total}`;
+    const info = getBadgeShelfInfo(progress.unlockedBadges);
+    shelf.querySelector(".badge-shelf-label").textContent = `${info.icon} ${info.label}`;
+    shelf.querySelector(".badge-shelf-count").textContent = info.countText;
   }
 
   function openSettingsMenu() {
@@ -239,8 +239,12 @@ export function renderToday(root, nav) {
     const sectionTpl = document.getElementById("tpl-badge-tier-section");
     const itemTpl = document.getElementById("tpl-badge-item");
 
+    // A lookahead of 3 previews a few still-locked upcoming Cups/Elite badges
+    // rather than the list quietly stopping at whatever's been earned so far.
+    const allBadges = getAllBadges(progress.longestStreak, progress.totalCompleted, 3);
+
     const sections = BADGE_TIERS.map((tier) => {
-      const tierBadges = BADGES.filter((b) => b.tier === tier.id);
+      const tierBadges = allBadges.filter((b) => b.tier === tier.id);
       const unlockedCount = tierBadges.filter((b) => progress.unlockedBadges.includes(b.id)).length;
 
       const section = sectionTpl.content.cloneNode(true);
