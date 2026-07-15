@@ -1,9 +1,13 @@
 import { CATEGORIES, exercisesByCategory } from "../exercises.js";
+import { getLevel } from "../storage.js";
+import { DEFAULT_LEVEL, scaledExercise } from "../levels.js";
 import { openSheet } from "../sheet.js";
 
 export function renderLibrary(root, nav) {
   const tpl = document.getElementById("tpl-library");
   root.replaceChildren(tpl.content.cloneNode(true));
+
+  const level = getLevel() || DEFAULT_LEVEL;
 
   root.querySelector(".back-btn").addEventListener("click", () => nav.toToday());
 
@@ -16,7 +20,8 @@ export function renderLibrary(root, nav) {
     section.querySelector(".library-section-title").textContent = category.label;
     section.querySelector(".library-section-blurb").textContent = category.blurb;
 
-    const items = exercisesByCategory(category.id).map((exercise) => {
+    const items = exercisesByCategory(category.id).map((baseExercise) => {
+      const exercise = scaledExercise(baseExercise, level);
       const item = itemTpl.content.cloneNode(true);
       item.querySelector(".card-title").textContent = exercise.name;
       const meta = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;

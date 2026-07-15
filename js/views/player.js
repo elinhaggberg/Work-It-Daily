@@ -1,5 +1,6 @@
-import { getTodayStatus, completeToday, getSoundEnabled, setSoundEnabled } from "../storage.js";
+import { getTodayStatus, completeToday, getSoundEnabled, setSoundEnabled, getLevel } from "../storage.js";
 import { pickExerciseForDate } from "../exercises.js";
+import { scaledExercise, DEFAULT_LEVEL } from "../levels.js";
 import { formatClock } from "../util.js";
 import * as audio from "../audio.js";
 import { setWakeLockWanted } from "../wakelock.js";
@@ -11,7 +12,8 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 
 export function renderPlayer(root, nav) {
   const { progress } = getTodayStatus();
-  const { exercise } = pickExerciseForDate(new Date(), progress.currentStreak);
+  const { exercise: baseExercise } = pickExerciseForDate(new Date(), progress.currentStreak);
+  const exercise = scaledExercise(baseExercise, getLevel() || DEFAULT_LEVEL);
 
   const tpl = document.getElementById("tpl-player");
   root.replaceChildren(tpl.content.cloneNode(true));

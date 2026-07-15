@@ -2,6 +2,7 @@ import { renderToday } from "./views/today.js";
 import { renderPlayer } from "./views/player.js";
 import { renderFinish } from "./views/finish.js";
 import { renderLibrary } from "./views/library.js";
+import { renderCalendar } from "./views/calendar.js";
 import { applyTheme } from "./theme.js";
 
 applyTheme();
@@ -23,6 +24,9 @@ const nav = {
   toLibrary: () => {
     location.hash = "#/library";
   },
+  toCalendar: () => {
+    location.hash = "#/calendar";
+  },
 };
 
 function route() {
@@ -42,6 +46,9 @@ function route() {
       break;
     case "library":
       renderLibrary(root, nav);
+      break;
+    case "calendar":
+      renderCalendar(root, nav);
       break;
     default:
       renderToday(root, nav);

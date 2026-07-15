@@ -7,8 +7,11 @@ import {
   dismissBackupBanner,
   shouldShowBackupBanner,
   resetAllData,
+  getLevel,
+  setLevel,
 } from "../storage.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
+import { DEFAULT_LEVEL, scaledExercise, getLevelInfo } from "../levels.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
 import { shareOrDownload, filenameFor } from "../share.js";
@@ -20,7 +23,9 @@ export function renderToday(root, nav) {
   root.replaceChildren(tpl.content.cloneNode(true));
 
   const { doneToday, progress } = getTodayStatus();
-  const { exercise, isChallengeDay } = pickExerciseForDate(new Date(), progress.currentStreak);
+  const level = getLevel() || DEFAULT_LEVEL;
+  const { exercise: baseExercise, isChallengeDay } = pickExerciseForDate(new Date(), progress.currentStreak);
+  const exercise = scaledExercise(baseExercise, level);
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });
 
@@ -33,6 +38,7 @@ export function renderToday(root, nav) {
   const card = root.querySelector("#exercise-card");
   const category = CATEGORIES.find((c) => c.id === exercise.category);
   card.querySelector(".exercise-category").textContent = category ? category.label : exercise.category;
+  card.querySelector(".exercise-level-tag").textContent = getLevelInfo(level).label;
   card.querySelector(".exercise-name").textContent = exercise.name;
   card.querySelector(".exercise-amount").textContent =
     exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
@@ -57,8 +63,13 @@ export function renderToday(root, nav) {
 
   root.querySelector("#library-btn").addEventListener("click", () => nav.toLibrary());
   root.querySelector("#settings-btn").addEventListener("click", openSettingsMenu);
+  root.querySelector("#calendar-btn").addEventListener("click", () => nav.toCalendar());
   renderBadgeShelf(root);
   root.querySelector("#badge-shelf").addEventListener("click", openBadgesSheet);
+
+  if (!getLevel()) {
+    openLevelChooser();
+  }
 
   const banner = root.querySelector("#backup-banner");
   if (shouldShowBackupBanner()) {
@@ -96,6 +107,10 @@ export function renderToday(root, nav) {
       sheet.close();
       openCustomize();
     });
+    sheet.el.querySelector("#set-level-btn").addEventListener("click", () => {
+      sheet.close();
+      openLevelChooser();
+    });
     sheet.el.querySelector("#export-all-btn").addEventListener("click", async () => {
       await doExport();
       sheet.close();
@@ -107,6 +122,21 @@ export function renderToday(root, nav) {
     sheet.el.querySelector("#delete-all-btn").addEventListener("click", () => {
       sheet.close();
       openDeleteAllConfirm();
+    });
+  }
+
+  function openLevelChooser() {
+    const sheet = openSheet("tpl-level-chooser");
+    sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
+    const current = getLevel() || DEFAULT_LEVEL;
+    const buttons = sheet.el.querySelectorAll(".level-option");
+    buttons.forEach((btn) => btn.classList.toggle("active", btn.dataset.level === current));
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setLevel(btn.dataset.level);
+        sheet.close();
+        renderToday(root, nav);
+      });
     });
   }
 

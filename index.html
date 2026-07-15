@@ -61,7 +61,10 @@
 
       <div class="card exercise-card" id="exercise-card">
         <div id="challenge-banner" class="challenge-banner hidden">⭐ Weekly challenge</div>
-        <p class="exercise-category"></p>
+        <div class="exercise-meta-row">
+          <p class="exercise-category"></p>
+          <span class="exercise-level-tag"></span>
+        </div>
         <h2 class="exercise-name"></h2>
         <p class="exercise-amount"></p>
         <p class="exercise-description"></p>
@@ -75,6 +78,11 @@
       <button type="button" class="badge-shelf" id="badge-shelf">
         <span>🏅 Badges</span>
         <span class="badge-shelf-count"></span>
+      </button>
+
+      <button type="button" class="badge-shelf" id="calendar-btn">
+        <span>📅 Calendar</span>
+        <span class="badge-shelf-count">→</span>
       </button>
 
       <button type="button" class="text-btn library-link" id="library-btn">Browse exercise library →</button>
@@ -106,6 +114,14 @@
         </svg>
         <span>Customize</span>
       </button>
+      <button type="button" class="menu-item" id="set-level-btn">
+        <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+          <rect x="48" y="320" width="80" height="160" rx="10" />
+          <rect x="216" y="220" width="80" height="260" rx="10" />
+          <rect x="384" y="120" width="80" height="360" rx="10" />
+        </svg>
+        <span>Set level</span>
+      </button>
       <button type="button" class="menu-item" id="export-all-btn">
         <svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M384 192c53 0 96-43 96-96s-43-96-96-96-96 43-96 96c0 5.4 .5 10.8 1.3 16L159.6 184.1c-16.9-15-39.2-24.1-63.6-24.1-53 0-96 43-96 96s43 96 96 96c24.4 0 46.6-9.1 63.6-24.1L289.3 400c-.9 5.2-1.3 10.5-1.3 16 0 53 43 96 96 96s96-43 96-96-43-96-96-96c-24.4 0-46.6 9.1-63.6 24.1L190.7 272c.9-5.2 1.3-10.5 1.3-16s-.5-10.8-1.3-16l129.7-72.1c16.9 15 39.2 24.1 63.6 24.1z"/></svg>
         <span>Export backup</span>
@@ -132,6 +148,38 @@
     </div>
   </template>
 
+  <template id="tpl-level-chooser">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Choose your level</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="level-intro">Sets how many reps or seconds each exercise asks for. Change this anytime from the gear menu.</p>
+      <div class="level-option-list">
+        <button type="button" class="level-option" data-level="easy">
+          <span class="level-option-label">Easy</span>
+          <span class="level-option-mult">0.7×</span>
+          <span class="level-option-blurb">Lighter reps and shorter holds</span>
+        </button>
+        <button type="button" class="level-option" data-level="medium">
+          <span class="level-option-label">Medium</span>
+          <span class="level-option-mult">1×</span>
+          <span class="level-option-blurb">The standard challenge</span>
+        </button>
+        <button type="button" class="level-option" data-level="hard">
+          <span class="level-option-label">Hard</span>
+          <span class="level-option-mult">1.3×</span>
+          <span class="level-option-blurb">Noticeably tougher</span>
+        </button>
+        <button type="button" class="level-option" data-level="brutal">
+          <span class="level-option-label">Brutal</span>
+          <span class="level-option-mult">1.6×</span>
+          <span class="level-option-blurb">Not for the faint of heart</span>
+        </button>
+      </div>
+    </div>
+  </template>
+
   <template id="tpl-instructions">
     <div class="sheet instructions-sheet">
       <header class="sheet-header">
@@ -150,12 +198,20 @@
           <p>Every day the app picks one bodyweight exercise for you. Do it, tap done, and your streak grows. The exercise rotates automatically — no setup needed.</p>
         </section>
         <section>
+          <h3>Level</h3>
+          <p>Choose Easy, Medium, Hard, or Brutal on Day 1 — it scales every exercise's reps and hold times up or down. Change it anytime from Settings &gt; <strong>Set level</strong>.</p>
+        </section>
+        <section>
           <h3>Streaks &amp; freezes</h3>
           <p>Complete an exercise every day to build your streak. Every 7-day streak earns you a <strong>streak freeze</strong> (❄, max 2 stored) — if you ever miss exactly one day, a freeze automatically bridges the gap instead of resetting you to zero.</p>
         </section>
         <section>
           <h3>Weekly challenge</h3>
           <p>Every 7th day of an active streak swaps in a harder move from the challenge pool — a little extra to mark the milestone.</p>
+        </section>
+        <section>
+          <h3>Calendar &amp; saving missed days</h3>
+          <p>Tap "Calendar" on the home screen to see every day you've done, missed, or had a freeze cover. Missed a day? Tap it to save it retroactively with a harder makeup exercise (1.5× penalty) so it counts toward your streak instead of leaving a gap.</p>
         </section>
         <section>
           <h3>Badges</h3>
@@ -333,6 +389,61 @@
       </header>
       <p class="card-meta exercise-detail-meta"></p>
       <p class="exercise-detail-desc"></p>
+    </div>
+  </template>
+
+  <template id="tpl-calendar">
+    <header class="topbar">
+      <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
+      <h1>Calendar</h1>
+    </header>
+    <div class="calendar-scroll">
+      <div class="calendar-nav">
+        <button type="button" class="icon-btn" id="calendar-prev-btn" aria-label="Previous month"><svg class="icon" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M41 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L41 233.4z"/></svg></button>
+        <span id="calendar-month-label" class="calendar-month-label"></span>
+        <button type="button" class="icon-btn" id="calendar-next-btn" aria-label="Next month"><svg class="icon" viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></button>
+      </div>
+      <div class="calendar-weekdays" id="calendar-weekdays"></div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-legend">
+        <span><i class="legend-dot is-done"></i> Done</span>
+        <span><i class="legend-dot is-rescued"></i> Saved</span>
+        <span><i class="legend-dot is-frozen"></i> Freeze</span>
+        <span><i class="legend-dot is-missed"></i> Missed</span>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-day-info">
+    <div class="sheet confirm-sheet">
+      <header class="sheet-header">
+        <h2 class="day-info-date"></h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="confirm-message day-info-status"></p>
+    </div>
+  </template>
+
+  <template id="tpl-save-day">
+    <div class="sheet confirm-sheet">
+      <header class="sheet-header">
+        <h2 class="save-day-date"></h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <div class="save-day-form">
+        <p class="confirm-message">You missed this day. Save it with a harder makeup exercise:</p>
+        <p class="save-day-exercise"></p>
+        <p class="save-day-penalty"></p>
+        <div class="form-actions">
+          <button type="button" class="text-btn secondary save-day-cancel-btn">Cancel</button>
+          <button type="button" class="text-btn danger save-day-confirm-btn">Save this day</button>
+        </div>
+      </div>
+      <div class="save-day-success hidden">
+        <p class="confirm-message">✅ Day saved — your streak carries through.</p>
+        <p class="save-day-badge-note hidden"></p>
+        <button type="button" class="text-btn primary save-day-done-btn">Done</button>
+      </div>
     </div>
   </template>
 
