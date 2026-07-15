@@ -16,7 +16,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze }) {
 }
 
 export function renderFinish(root, nav, result) {
-  const { exercise, progress, newlyUnlocked, usedFreeze } = result;
+  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver } = result;
 
   const tpl = document.getElementById("tpl-finish");
   root.replaceChildren(tpl.content.cloneNode(true));
@@ -54,6 +54,8 @@ export function renderFinish(root, nav, result) {
   } else {
     badgeSection.classList.add("hidden");
   }
+
+  root.querySelector("#day1-tip").classList.toggle("hidden", !isFirstEver);
 
   const summaryText = buildSummaryText(result);
   const copyBtn = root.querySelector("#copy-btn");

@@ -63,7 +63,14 @@ export function renderToday(root, nav) {
 
   root.querySelector("#library-btn").addEventListener("click", () => nav.toLibrary());
   root.querySelector("#settings-btn").addEventListener("click", openSettingsMenu);
-  root.querySelector("#calendar-btn").addEventListener("click", () => nav.toCalendar());
+  const calendarBtn = root.querySelector("#calendar-btn");
+  calendarBtn.addEventListener("click", () => nav.toCalendar());
+  const missedCount = progress.missedDates.length;
+  if (missedCount > 0) {
+    calendarBtn.classList.add("has-missed");
+    calendarBtn.querySelector(".calendar-btn-label").textContent =
+      `⚠️ ${missedCount} day${missedCount === 1 ? "" : "s"} to rescue`;
+  }
   renderBadgeShelf(root);
   root.querySelector("#badge-shelf").addEventListener("click", openBadgesSheet);
 

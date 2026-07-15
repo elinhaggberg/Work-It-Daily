@@ -146,6 +146,21 @@ function checkForNewBadges(progress, stats) {
   return newlyUnlocked;
 }
 
+// Past days that are neither completed nor freeze-bridged — i.e. genuinely
+// missed and still eligible to be saved from the calendar.
+function getMissedDates(raw, stats) {
+  const doneDates = new Set(raw.completions.map((c) => c.date));
+  const firstOpenKey = toDateKey(new Date(raw.firstOpenAt));
+  const todayKey = toDateKey(new Date());
+  const missed = [];
+  let cursor = firstOpenKey;
+  while (cursor < todayKey) {
+    if (!doneDates.has(cursor) && !stats.bridgedDates.has(cursor)) missed.push(cursor);
+    cursor = addDays(cursor, 1);
+  }
+  return missed;
+}
+
 export function getProgress() {
   const raw = loadRaw();
   const stats = computeStreakStats(raw.completions);
@@ -155,6 +170,7 @@ export function getProgress() {
     longestStreak: stats.longestStreak,
     freezeTokens: stats.freezeTokens,
     bridgedDates: stats.bridgedDates,
+    missedDates: getMissedDates(raw, stats),
     totalCompleted: raw.completions.length,
   };
 }

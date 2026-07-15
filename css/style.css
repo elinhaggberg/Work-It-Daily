@@ -285,6 +285,11 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   font-weight: 600;
 }
 .badge-shelf-count { color: var(--text-dim); }
+.badge-shelf.has-missed {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+}
+.badge-shelf.has-missed .calendar-btn-label, .badge-shelf.has-missed .badge-shelf-count { color: var(--danger); }
 
 .library-link { color: var(--accent); }
 
@@ -529,6 +534,16 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .badge-unlock-section { margin-top: 10px; width: 100%; }
 .badge-unlock-title { font-weight: 700; margin: 0 0 8px; }
 .badge-unlock-section .badge-item { margin-bottom: 8px; background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
+.day1-tip {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-2) 14%, var(--surface-2));
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text);
+  text-align: left;
+}
 .finish-card .text-btn.primary { margin-top: 12px; width: 100%; padding: 14px; }
 .finish-card .text-btn:not(.primary) { width: 100%; color: var(--text-dim); }
 

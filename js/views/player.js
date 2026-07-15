@@ -122,6 +122,7 @@ export function renderPlayer(root, nav) {
       progress: result.progress,
       newlyUnlocked: result.newlyUnlocked,
       usedFreeze: result.usedFreeze,
+      isFirstEver: result.progress.totalCompleted === 1,
     });
   }
 
