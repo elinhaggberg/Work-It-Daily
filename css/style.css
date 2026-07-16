@@ -109,6 +109,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-dim);
+  text-decoration: none;
 }
 .text-btn.primary { color: var(--accent-text); background: var(--accent); }
 .text-btn:active { opacity: 0.8; }

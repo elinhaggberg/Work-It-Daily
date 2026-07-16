@@ -156,10 +156,19 @@ export function renderToday(root, nav) {
       sheet.close();
       openImport();
     });
+    sheet.el.querySelector("#workout-timer-link-btn").addEventListener("click", () => {
+      sheet.close();
+      openWorkoutTimerPromo();
+    });
     sheet.el.querySelector("#delete-all-btn").addEventListener("click", () => {
       sheet.close();
       openDeleteAllConfirm();
     });
+  }
+
+  function openWorkoutTimerPromo() {
+    const sheet = openSheet("tpl-promo-workout-timer");
+    sheet.el.querySelector(".cancel-btn").addEventListener("click", () => sheet.close());
   }
 
   function openAppUpdatedSheet() {
