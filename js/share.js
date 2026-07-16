@@ -32,3 +32,24 @@ export async function shareOrDownload(filename, content) {
   downloadFile(filename, content);
   return "downloaded";
 }
+
+// Tries the native share sheet for plain text (best for "send this to a
+// friend" — texting, WhatsApp, etc.); falls back to clipboard on anywhere
+// that isn't supported (desktop browsers mainly).
+export async function shareText(text) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+      return "shared";
+    } catch (err) {
+      if (err && err.name === "AbortError") return "cancelled";
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return "copied";
+  } catch {
+    return "failed";
+  }
+}

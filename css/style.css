@@ -631,6 +631,17 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   color: var(--text);
   text-align: left;
 }
+.challenge-friend-section {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+  text-align: left;
+  width: 100%;
+}
+.challenge-friend-title { margin: 0 0 2px; font-weight: 700; }
+.challenge-friend-desc { margin: 0 0 10px; font-size: 0.85rem; color: var(--text-dim); }
+.challenge-friend-section .text-btn { margin: 0; }
 .finish-card .text-btn.primary { margin-top: 12px; width: 100%; padding: 14px; }
 .finish-card .text-btn:not(.primary) { width: 100%; color: var(--text-dim); }
 

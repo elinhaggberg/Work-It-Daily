@@ -4,6 +4,9 @@ import { getTheme, PLAYFUL_SWATCHES } from "../theme.js";
 import { formatDate } from "../util.js";
 import { BADGE_TIERS } from "../storage.js";
 import { getLevelLabel } from "../levels.js";
+import { shareText } from "../share.js";
+
+const APP_LINK = "https://work-it-daily.vercel.app";
 
 function tierIcon(badge) {
   return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
@@ -17,7 +20,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
   const levelLabel = getLevelLabel(levelValue);
   const isNewRecord = progress.currentStreak === progress.longestStreak && progress.longestStreak > 1;
 
-  const lines = [`Work It Daily #${progress.currentStreak}`];
+  const lines = [`Work It Daily — ${formatDate(Date.now())}`];
   lines.push(
     isRescue
       ? `💪 ${formatDate(`${rescueDateKey}T00:00:00`)} — ${exercise.name} · ${amount}`
@@ -30,6 +33,15 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
   if (isRescue) lines.push("✅ Saved");
   for (const badge of newlyUnlocked) lines.push(`${tierIcon(badge)} ${badge.label}`);
   return lines.join("\n");
+}
+
+function buildChallengeText(streak) {
+  return (
+    `I challenge you! I have a ${streak} day streak on Work It Daily - can you beat me? ` +
+    `One body-weight exercise per day, at your chosen level. Open the link, choose "Share" ` +
+    `and "Save to Home Screen" (or Install). Text me your daily summary and the game is on! 🤝\n\n` +
+    APP_LINK
+  );
 }
 
 export function renderFinish(root, nav, result) {
@@ -78,6 +90,19 @@ export function renderFinish(root, nav, result) {
   }
 
   root.querySelector("#day1-tip").classList.toggle("hidden", !isFirstEver);
+
+  const isFirstWeekStreak = newlyUnlocked.some((badge) => badge.id === "milestone-7");
+  const challengeSection = root.querySelector("#challenge-friend-section");
+  challengeSection.classList.toggle("hidden", !isFirstWeekStreak);
+  if (isFirstWeekStreak) {
+    const challengeBtn = root.querySelector("#challenge-friend-btn");
+    challengeBtn.addEventListener("click", async () => {
+      const outcome = await shareText(buildChallengeText(progress.currentStreak));
+      if (outcome === "shared" || outcome === "cancelled") return;
+      challengeBtn.textContent = outcome === "copied" ? "Copied ✓" : "Couldn't share";
+      setTimeout(() => (challengeBtn.textContent = "Challenge a friend"), 1600);
+    });
+  }
 
   const summaryText = buildSummaryText(result);
   const copyBtn = root.querySelector("#copy-btn");
