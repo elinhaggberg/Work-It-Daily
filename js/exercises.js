@@ -21,13 +21,15 @@ export const EXERCISES = [
   { id: "incline-push-up", name: "Incline push-ups", category: "push", difficulty: "beginner", type: "reps", amount: 12,
     description: "Hands on a chair, step, or counter instead of the floor — the higher your hands, the easier the rep. Same straight-body form as a push-up." },
   { id: "pike-push-up", name: "Pike push-ups", category: "push", difficulty: "intermediate", type: "reps", amount: 8,
+    levels: { easy: 5, medium: 8, hard: 11, brutal: 15 },
     description: "Hips high in an inverted-V, hands shoulder-width. Bend the elbows to lower your head toward the floor, then press back up — a shoulder-focused push-up." },
   { id: "diamond-push-up", name: "Diamond push-ups", category: "push", difficulty: "intermediate", type: "reps", amount: 8,
+    levels: { easy: 5, medium: 8, hard: 11, brutal: 15 },
     description: "Hands together under your chest, thumbs and index fingers touching to form a diamond. Lower and press up — shifts the load onto the triceps." },
   { id: "chair-dip", name: "Chair dips", category: "push", difficulty: "intermediate", type: "reps", amount: 10,
     description: "Hands on the edge of a sturdy chair or step behind you, legs extended. Bend the elbows to lower your hips, then push back up." },
   { id: "archer-push-up", name: "Archer push-ups", category: "push", difficulty: "advanced", type: "reps", amount: 6,
-    challenge: true,
+    challenge: true, levels: { easy: 4, medium: 6, hard: 8, brutal: 10 },
     description: "Wide hand placement; lower toward one hand while the other arm stays straight, sliding out to the side. Alternate sides each rep." },
 
   // Pull
@@ -38,11 +40,13 @@ export const EXERCISES = [
   { id: "doorframe-row", name: "Doorframe rows", category: "pull", difficulty: "intermediate", type: "reps", amount: 10,
     description: "Hold a doorframe edge, lean your weight back with straight arms, then pull your chest toward the frame and back out." },
   { id: "chin-up", name: "Chin-ups", category: "pull", difficulty: "intermediate", type: "reps", amount: 5,
+    levels: { easy: 3, medium: 5, hard: 7, brutal: 10 },
     description: "Palms facing you on a bar, pull your chin over the bar, then lower under control. No bar? Sub in an extra set of doorframe rows." },
   { id: "pull-up", name: "Pull-ups", category: "pull", difficulty: "advanced", type: "reps", amount: 5,
+    levels: { easy: 3, medium: 5, hard: 7, brutal: 10 },
     description: "Palms facing away on a bar, pull your chest toward the bar, then lower fully under control." },
   { id: "towel-row", name: "Towel rows", category: "pull", difficulty: "advanced", type: "reps", amount: 8,
-    challenge: true,
+    challenge: true, levels: { easy: 5, medium: 8, hard: 11, brutal: 15 },
     description: "Loop a towel around a sturdy anchor (railing, pole), grip both ends, and row your chest toward it — the give in the towel adds a grip and stability challenge." },
 
   // Legs
@@ -57,7 +61,7 @@ export const EXERCISES = [
   { id: "jump-squat", name: "Jump squats", category: "legs", difficulty: "intermediate", type: "reps", amount: 20,
     description: "Squat down, then explode upward into a jump, landing softly back into the squat." },
   { id: "pistol-progression", name: "Pistol squat progression", category: "legs", difficulty: "advanced", type: "reps", amount: 6,
-    challenge: true,
+    challenge: true, levels: { easy: 4, medium: 6, hard: 8, brutal: 10 },
     description: "Single-leg squat with the other leg extended forward — hold onto a doorframe or chair for balance as needed while you build the strength." },
 
   // Core

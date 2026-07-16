@@ -23,7 +23,17 @@ function scaleValue(amount, type, multiplier) {
   return type === "timer" ? Math.max(5, Math.round(scaled / 5) * 5) : Math.max(1, Math.round(scaled));
 }
 
+// Most exercises scale by the flat level multiplier, which works well for
+// endurance/high-rep moves (a plank or a set of squats scales smoothly with
+// time or volume). It breaks down for near-maximal-strength, low-rep moves
+// like pull-ups — going from 5 to 13 reps isn't "a bit harder," it's the
+// difference between achievable and impossible for most people. Those
+// exercises carry their own hand-tuned `levels` table instead, which the
+// rescue penalty still multiplies on top of for a missed-day makeup.
 export function scaleAmount(exercise, levelId, extraMultiplier = 1) {
+  if (exercise.levels && exercise.levels[levelId] !== undefined) {
+    return scaleValue(exercise.levels[levelId], exercise.type, extraMultiplier);
+  }
   const level = getLevelInfo(levelId);
   return scaleValue(exercise.amount, exercise.type, level.multiplier * extraMultiplier);
 }
