@@ -330,6 +330,7 @@
       <span class="total-timer" id="total-timer">00:00</span>
     </header>
     <div class="player-stage">
+      <p class="rescue-banner hidden" id="rescue-banner"></p>
       <p class="interval-name" id="exercise-name"></p>
       <div class="stage-display" id="stage-display">
         <div class="countdown-ring hidden" id="countdown-ring" aria-hidden="true">
@@ -353,7 +354,7 @@
       <canvas id="confetti-canvas"></canvas>
       <div class="finish-card">
         <div class="mascot-slot" id="mascot-slot"></div>
-        <h1>Well done!</h1>
+        <h1 id="finish-title">Well done!</h1>
         <p class="finish-exercise" id="finish-exercise-name"></p>
         <div class="finish-streak-box">
           <span class="finish-streak-flame">🔥</span>
@@ -445,19 +446,12 @@
         <h2 class="save-day-date"></h2>
         <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
       </header>
-      <div class="save-day-form">
-        <p class="confirm-message">You missed this day. Save it with a harder makeup exercise:</p>
-        <p class="save-day-exercise"></p>
-        <p class="save-day-penalty"></p>
-        <div class="form-actions">
-          <button type="button" class="text-btn secondary save-day-cancel-btn">Cancel</button>
-          <button type="button" class="text-btn danger save-day-confirm-btn">Save this day</button>
-        </div>
-      </div>
-      <div class="save-day-success hidden">
-        <p class="confirm-message">✅ Day saved — your streak carries through.</p>
-        <p class="save-day-badge-note hidden"></p>
-        <button type="button" class="text-btn primary save-day-done-btn">Done</button>
+      <p class="confirm-message">You missed this day. Save it with a harder makeup exercise:</p>
+      <p class="save-day-exercise"></p>
+      <p class="save-day-penalty"></p>
+      <div class="form-actions">
+        <button type="button" class="text-btn secondary save-day-cancel-btn">Cancel</button>
+        <button type="button" class="text-btn danger save-day-start-btn">Start</button>
       </div>
     </div>
   </template>

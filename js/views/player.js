@@ -1,7 +1,7 @@
-import { getTodayStatus, completeToday, getSoundEnabled, setSoundEnabled, getLevel } from "../storage.js";
+import { getTodayStatus, completeToday, saveDay, getSoundEnabled, setSoundEnabled, getLevel } from "../storage.js";
 import { pickExerciseForDate } from "../exercises.js";
-import { scaledExercise, DEFAULT_LEVEL } from "../levels.js";
-import { formatClock } from "../util.js";
+import { scaledExercise, DEFAULT_LEVEL, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
+import { formatClock, formatDate } from "../util.js";
 import * as audio from "../audio.js";
 import { setWakeLockWanted } from "../wakelock.js";
 import { ICON_PLAY, ICON_PAUSE, ICON_VOLUME_HIGH, ICON_VOLUME_XMARK } from "../icons.js";
@@ -10,14 +10,26 @@ const LEAD_IN_SECONDS = 3;
 const WARNING_SECONDS = 3;
 const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 
-export function renderPlayer(root, nav) {
-  const { progress } = getTodayStatus();
-  const { exercise: baseExercise } = pickExerciseForDate(new Date(), progress.currentStreak);
+export function renderPlayer(root, nav, rescueDateKey = null) {
   const levelValue = getLevel() ?? DEFAULT_LEVEL;
-  const exercise = scaledExercise(baseExercise, levelValue);
+
+  let baseExercise;
+  if (rescueDateKey) {
+    ({ exercise: baseExercise } = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`), 0));
+  } else {
+    const { progress } = getTodayStatus();
+    ({ exercise: baseExercise } = pickExerciseForDate(new Date(), progress.currentStreak));
+  }
+  const exercise = scaledExercise(baseExercise, levelValue, rescueDateKey ? RESCUE_PENALTY_MULTIPLIER : 1);
 
   const tpl = document.getElementById("tpl-player");
   root.replaceChildren(tpl.content.cloneNode(true));
+
+  const rescueBannerEl = root.querySelector("#rescue-banner");
+  if (rescueDateKey) {
+    rescueBannerEl.textContent = `⚠️ Saving ${formatDate(`${rescueDateKey}T00:00:00`)} — ${RESCUE_PENALTY_MULTIPLIER}× penalty`;
+    rescueBannerEl.classList.remove("hidden");
+  }
 
   const exerciseNameEl = root.querySelector("#exercise-name");
   const bigNumberEl = root.querySelector("#big-number");
@@ -116,6 +128,29 @@ export function renderPlayer(root, nav) {
     stopTicking();
     setWakeLockWanted(false);
     audio.workoutComplete();
+
+    if (rescueDateKey) {
+      const result = saveDay(rescueDateKey, levelValue);
+      if (!result) {
+        // Already saved (or no longer eligible) by the time this finished —
+        // nothing to celebrate, just head back rather than show a broken screen.
+        nav.toCalendar();
+        return;
+      }
+      nav.toFinish({
+        exercise: { ...result.exercise, amount: result.amount },
+        totalSeconds: state.totalElapsed,
+        progress: result.progress,
+        newlyUnlocked: result.newlyUnlocked,
+        usedFreeze: false,
+        isFirstEver: result.progress.totalCompleted === 1,
+        levelValue,
+        isRescue: true,
+        rescueDateKey,
+      });
+      return;
+    }
+
     const result = completeToday(exercise);
     nav.toFinish({
       exercise,
@@ -131,7 +166,8 @@ export function renderPlayer(root, nav) {
   function exit() {
     stopTicking();
     setWakeLockWanted(false);
-    nav.toToday();
+    if (rescueDateKey) nav.toCalendar();
+    else nav.toToday();
   }
 
   function render() {

@@ -9,21 +9,23 @@ function tierIcon(badge) {
   return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
 }
 
-function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue }) {
+function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue, isRescue, rescueDateKey }) {
   const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
   const levelLabel = getLevelLabel(levelValue);
-  const lines = [
-    `Work It Daily — ${formatDate(Date.now())}`,
-    `${exercise.name} (${amount}) · ${levelLabel}`,
-    `🔥 ${progress.currentStreak} day streak (best: ${progress.longestStreak})`,
-  ];
+  const lines = [`Work It Daily — ${formatDate(Date.now())}`];
+  if (isRescue) {
+    lines.push(`Saved ${formatDate(`${rescueDateKey}T00:00:00`)}: ${exercise.name} (${amount}) · ${levelLabel}`);
+  } else {
+    lines.push(`${exercise.name} (${amount}) · ${levelLabel}`);
+  }
+  lines.push(`🔥 ${progress.currentStreak} day streak (best: ${progress.longestStreak})`);
   if (usedFreeze) lines.push("❄ A streak freeze covered a missed day");
   for (const badge of newlyUnlocked) lines.push(`${tierIcon(badge)} Badge unlocked: ${badge.label} (${badge.desc})`);
   return lines.join("\n");
 }
 
 export function renderFinish(root, nav, result) {
-  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver } = result;
+  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver, isRescue, rescueDateKey } = result;
 
   const tpl = document.getElementById("tpl-finish");
   root.replaceChildren(tpl.content.cloneNode(true));
@@ -35,7 +37,10 @@ export function renderFinish(root, nav, result) {
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: "cheer", size: 128 });
 
-  root.querySelector("#finish-exercise-name").textContent = exercise.name;
+  root.querySelector("#finish-title").textContent = isRescue ? "Day saved!" : "Well done!";
+  root.querySelector("#finish-exercise-name").textContent = isRescue
+    ? `${formatDate(`${rescueDateKey}T00:00:00`)} — ${exercise.name}`
+    : exercise.name;
   root.querySelector("#finish-streak").textContent = progress.currentStreak;
   root.querySelector("#finish-streak-label").textContent =
     progress.currentStreak === 1 ? "day streak — nice start!" : "day streak";
@@ -79,5 +84,7 @@ export function renderFinish(root, nav, result) {
     }
   });
 
-  root.querySelector("#done-btn").addEventListener("click", () => nav.toToday());
+  const doneBtn = root.querySelector("#done-btn");
+  doneBtn.textContent = isRescue ? "Back to calendar" : "Back to today";
+  doneBtn.addEventListener("click", () => (isRescue ? nav.toCalendar() : nav.toToday()));
 }

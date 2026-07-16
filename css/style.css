@@ -520,6 +520,16 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   padding: 20px;
   text-align: center;
 }
+.rescue-banner {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+  color: var(--danger);
+}
 .interval-name { font-size: 1.6rem; font-weight: 700; margin: 0; }
 
 .stage-display {
@@ -704,5 +714,3 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 /* Save-day sheet */
 .save-day-exercise { font-weight: 700; margin: 10px 0 4px; }
 .save-day-penalty { margin: 0 0 14px; font-size: 0.85rem; color: var(--danger); }
-.save-day-success { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-.save-day-badge-note { margin: 0; font-weight: 700; color: var(--accent); }

@@ -14,8 +14,8 @@ const nav = {
   toToday: () => {
     location.hash = "#/today";
   },
-  toPlayer: () => {
-    location.hash = "#/play";
+  toPlayer: (rescueDateKey) => {
+    location.hash = rescueDateKey ? `#/play/rescue/${rescueDateKey}` : "#/play";
   },
   toFinish: (result) => {
     pendingFinishResult = result;
@@ -34,9 +34,12 @@ function route() {
   const view = hash.replace(/^#\//, "").split("/")[0];
 
   switch (view) {
-    case "play":
-      renderPlayer(root, nav);
+    case "play": {
+      const parts = hash.replace(/^#\//, "").split("/");
+      const rescueDateKey = parts[1] === "rescue" ? parts[2] : null;
+      renderPlayer(root, nav, rescueDateKey);
       break;
+    }
     case "finish":
       if (!pendingFinishResult) {
         nav.toToday();

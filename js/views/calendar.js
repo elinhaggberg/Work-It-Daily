@@ -1,7 +1,8 @@
-import { getProgress, saveDay, toDateKey, getLevel } from "../storage.js";
+import { getProgress, toDateKey, getLevel } from "../storage.js";
 import { getExercise, pickExerciseForDate } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
+import { unlockAudio } from "../audio.js";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -159,28 +160,13 @@ export function renderCalendar(root, nav) {
     sheet.el.querySelector(".save-day-penalty").textContent =
       `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${getLevelLabel(level)} amount.`;
 
-    const confirmBtn = sheet.el.querySelector(".save-day-confirm-btn");
-    const successEl = sheet.el.querySelector(".save-day-success");
-    const formEl = sheet.el.querySelector(".save-day-form");
-
-    confirmBtn.addEventListener("click", () => {
-      const result = saveDay(dateKey, level);
-      if (!result) {
-        sheet.close();
-        return;
-      }
-      formEl.classList.add("hidden");
-      successEl.classList.remove("hidden");
-      if (result.newlyUnlocked.length > 0) {
-        const names = result.newlyUnlocked.map((b) => b.label).join(", ");
-        const noteEl = successEl.querySelector(".save-day-badge-note");
-        noteEl.textContent = `Badge unlocked: ${names}`;
-        noteEl.classList.remove("hidden");
-      }
-      successEl.querySelector(".save-day-done-btn").addEventListener("click", () => {
-        sheet.close();
-        draw();
-      });
+    // Actually doing the makeup exercise happens in the real player (same as
+    // today's exercise) rather than a single tap here — saveDay() only gets
+    // called once that playthrough finishes.
+    sheet.el.querySelector(".save-day-start-btn").addEventListener("click", () => {
+      unlockAudio();
+      sheet.close();
+      nav.toPlayer(dateKey);
     });
   }
 }

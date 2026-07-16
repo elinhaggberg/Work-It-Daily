@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.4.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.4.0",
+    notes: [
+      "Saving a missed day from the Calendar now takes you through the real countdown/timer/rep player, not a single tap — the day only counts once you've actually done the makeup exercise",
+    ],
+  },
   {
     version: "1.3.0",
     notes: [
