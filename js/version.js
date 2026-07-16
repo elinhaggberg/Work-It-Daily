@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.2.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.2.0",
+    notes: [
+      "Brutal now hits real \"most people can't do this\" targets — 50 push-ups, 50 squats, a 2:30 plank, 30 burpees, 25 pull-ups — with a believable Hard step in between, tuned from real feedback",
+    ],
+  },
   {
     version: "1.1.0",
     notes: [
