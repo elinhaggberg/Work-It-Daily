@@ -1,6 +1,6 @@
 import { getProgress, saveDay, toDateKey, getLevel } from "../storage.js";
 import { getExercise, pickExerciseForDate } from "../exercises.js";
-import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
+import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -149,7 +149,7 @@ export function renderCalendar(root, nav) {
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
     sheet.el.querySelector(".save-day-cancel-btn").addEventListener("click", () => sheet.close());
 
-    const level = getLevel() || DEFAULT_LEVEL;
+    const level = getLevel() ?? DEFAULT_LEVEL;
     const exercise = makeupExerciseFor(dateKey);
     const amount = scaleAmount(exercise, level, RESCUE_PENALTY_MULTIPLIER);
     const amountText = exercise.type === "timer" ? `${amount}s hold` : `${amount} reps`;
@@ -157,7 +157,7 @@ export function renderCalendar(root, nav) {
     sheet.el.querySelector(".save-day-date").textContent = formatLongDate(dateKey);
     sheet.el.querySelector(".save-day-exercise").textContent = `${exercise.name} — ${amountText}`;
     sheet.el.querySelector(".save-day-penalty").textContent =
-      `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${level} amount.`;
+      `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${getLevelLabel(level)} amount.`;
 
     const confirmBtn = sheet.el.querySelector(".save-day-confirm-btn");
     const successEl = sheet.el.querySelector(".save-day-success");

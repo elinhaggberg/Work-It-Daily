@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION = "1.3.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.3.0",
+    notes: [
+      "Level is now a slider instead of 4 buttons — drag anywhere between Easy/Medium/Hard/Brutal to land in between them instead of jumping straight to the next one",
+    ],
+  },
   {
     version: "1.2.0",
     notes: [

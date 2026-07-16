@@ -7,7 +7,7 @@ export function renderLibrary(root, nav) {
   const tpl = document.getElementById("tpl-library");
   root.replaceChildren(tpl.content.cloneNode(true));
 
-  const level = getLevel() || DEFAULT_LEVEL;
+  const level = getLevel() ?? DEFAULT_LEVEL;
 
   root.querySelector(".back-btn").addEventListener("click", () => nav.toToday());
 

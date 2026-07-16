@@ -1,5 +1,5 @@
 import { pickExerciseForDate } from "./exercises.js";
-import { scaleAmount, RESCUE_PENALTY_MULTIPLIER } from "./levels.js";
+import { scaleAmount, RESCUE_PENALTY_MULTIPLIER, LEVEL_ID_TO_VALUE } from "./levels.js";
 
 const PROGRESS_KEY = "wid_progress_v1";
 const THEME_KEY = "wid_theme_v1";
@@ -395,7 +395,7 @@ export function importBackupData(data) {
     throw new Error("That doesn't look like a Work It Daily backup file.");
   }
   saveRaw({ ...defaultProgress(), ...data.progress });
-  if (data.level) setLevel(data.level);
+  if (data.level !== undefined && data.level !== null) setLevel(data.level);
   return true;
 }
 
@@ -417,12 +417,19 @@ export function setThemePref(pref) {
   writeJSON(THEME_KEY, pref);
 }
 
+// Returns a slider position (0-3), or null if never set. Older installs
+// stored a named id ("easy"/"medium"/"hard"/"brutal") instead of a number —
+// those still resolve correctly to their equivalent position.
 export function getLevel() {
-  return localStorage.getItem(LEVEL_KEY) || null;
+  const raw = localStorage.getItem(LEVEL_KEY);
+  if (raw === null) return null;
+  const asNumber = Number(raw);
+  if (!Number.isNaN(asNumber) && raw.trim() !== "") return asNumber;
+  return LEVEL_ID_TO_VALUE[raw] ?? null;
 }
 
-export function setLevel(id) {
-  localStorage.setItem(LEVEL_KEY, id);
+export function setLevel(value) {
+  localStorage.setItem(LEVEL_KEY, String(value));
 }
 
 // Tracks which app version this device has already seen the "what's new"

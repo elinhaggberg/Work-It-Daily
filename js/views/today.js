@@ -15,7 +15,7 @@ import {
   setLastSeenVersion,
 } from "../storage.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
-import { DEFAULT_LEVEL, scaledExercise, getLevelInfo } from "../levels.js";
+import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
@@ -28,9 +28,7 @@ export function renderToday(root, nav) {
   root.replaceChildren(tpl.content.cloneNode(true));
 
   const { doneToday, progress } = getTodayStatus();
-  const level = getLevel() || DEFAULT_LEVEL;
   const { exercise: baseExercise, isChallengeDay } = pickExerciseForDate(new Date(), progress.currentStreak);
-  const exercise = scaledExercise(baseExercise, level);
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });
 
@@ -41,13 +39,19 @@ export function renderToday(root, nav) {
   freezeEl.title = `${progress.freezeTokens} streak freeze${progress.freezeTokens === 1 ? "" : "s"} saved — bridges one missed day`;
 
   const card = root.querySelector("#exercise-card");
-  const category = CATEGORIES.find((c) => c.id === exercise.category);
-  card.querySelector(".exercise-category").textContent = category ? category.label : exercise.category;
-  card.querySelector(".exercise-level-tag").textContent = getLevelInfo(level).label;
-  card.querySelector(".exercise-name").textContent = exercise.name;
-  card.querySelector(".exercise-amount").textContent =
-    exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
-  card.querySelector(".exercise-description").textContent = exercise.description;
+  // Reused by the level slider so the card updates live as it's dragged,
+  // not just on the next full render.
+  function renderExerciseCard(levelValue) {
+    const exercise = scaledExercise(baseExercise, levelValue);
+    const category = CATEGORIES.find((c) => c.id === exercise.category);
+    card.querySelector(".exercise-category").textContent = category ? category.label : exercise.category;
+    card.querySelector(".exercise-level-tag").textContent = getLevelLabel(levelValue);
+    card.querySelector(".exercise-name").textContent = exercise.name;
+    card.querySelector(".exercise-amount").textContent =
+      exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
+    card.querySelector(".exercise-description").textContent = exercise.description;
+  }
+  renderExerciseCard(getLevel() ?? DEFAULT_LEVEL);
 
   const challengeBadge = root.querySelector("#challenge-banner");
   challengeBadge.classList.toggle("hidden", !isChallengeDay);
@@ -79,7 +83,7 @@ export function renderToday(root, nav) {
   renderBadgeShelf(root);
   root.querySelector("#badge-shelf").addEventListener("click", openBadgesSheet);
 
-  if (!getLevel()) {
+  if (getLevel() === null) {
     openLevelChooser();
   }
 
@@ -169,15 +173,25 @@ export function renderToday(root, nav) {
   function openLevelChooser() {
     const sheet = openSheet("tpl-level-chooser");
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
-    const current = getLevel() || DEFAULT_LEVEL;
-    const buttons = sheet.el.querySelectorAll(".level-option");
-    buttons.forEach((btn) => btn.classList.toggle("active", btn.dataset.level === current));
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        setLevel(btn.dataset.level);
-        sheet.close();
-        renderToday(root, nav);
-      });
+
+    const slider = sheet.el.querySelector("#level-slider");
+    const labelEl = sheet.el.querySelector("#level-slider-label");
+    slider.min = LEVEL_MIN;
+    slider.max = LEVEL_MAX;
+    slider.step = LEVEL_STEP;
+
+    const current = getLevel() ?? DEFAULT_LEVEL;
+    slider.value = current;
+    labelEl.textContent = getLevelLabel(current);
+
+    // Saved and reflected on the actual card behind the sheet on every drag,
+    // not just on close — so it's already correct however the sheet closes
+    // (button tap or backdrop tap alike), no separate "confirm" step needed.
+    slider.addEventListener("input", () => {
+      const value = Number(slider.value);
+      setLevel(value);
+      labelEl.textContent = getLevelLabel(value);
+      renderExerciseCard(value);
     });
   }
 

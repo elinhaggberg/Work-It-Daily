@@ -3,15 +3,15 @@ import { renderMascot } from "../mascot.js";
 import { getTheme, PLAYFUL_SWATCHES } from "../theme.js";
 import { formatDate } from "../util.js";
 import { BADGE_TIERS } from "../storage.js";
-import { getLevelInfo } from "../levels.js";
+import { getLevelLabel } from "../levels.js";
 
 function tierIcon(badge) {
   return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
 }
 
-function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelId }) {
+function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue }) {
   const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
-  const levelLabel = getLevelInfo(levelId).label;
+  const levelLabel = getLevelLabel(levelValue);
   const lines = [
     `Work It Daily — ${formatDate(Date.now())}`,
     `${exercise.name} (${amount}) · ${levelLabel}`,

@@ -13,8 +13,8 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 export function renderPlayer(root, nav) {
   const { progress } = getTodayStatus();
   const { exercise: baseExercise } = pickExerciseForDate(new Date(), progress.currentStreak);
-  const levelId = getLevel() || DEFAULT_LEVEL;
-  const exercise = scaledExercise(baseExercise, levelId);
+  const levelValue = getLevel() ?? DEFAULT_LEVEL;
+  const exercise = scaledExercise(baseExercise, levelValue);
 
   const tpl = document.getElementById("tpl-player");
   root.replaceChildren(tpl.content.cloneNode(true));
@@ -124,7 +124,7 @@ export function renderPlayer(root, nav) {
       newlyUnlocked: result.newlyUnlocked,
       usedFreeze: result.usedFreeze,
       isFirstEver: result.progress.totalCompleted === 1,
-      levelId,
+      levelValue,
     });
   }
 

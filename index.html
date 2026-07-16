@@ -154,28 +154,14 @@
         <h2>Choose your level</h2>
         <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
       </header>
-      <p class="level-intro">Sets how many reps or seconds each exercise asks for. Change this anytime from the gear menu.</p>
-      <div class="level-option-list">
-        <button type="button" class="level-option" data-level="easy">
-          <span class="level-option-label">Easy</span>
-          <span class="level-option-mult">0.5×</span>
-          <span class="level-option-blurb">Lighter reps and shorter holds</span>
-        </button>
-        <button type="button" class="level-option" data-level="medium">
-          <span class="level-option-label">Medium</span>
-          <span class="level-option-mult">1×</span>
-          <span class="level-option-blurb">The standard challenge</span>
-        </button>
-        <button type="button" class="level-option" data-level="hard">
-          <span class="level-option-label">Hard</span>
-          <span class="level-option-mult">1.5×</span>
-          <span class="level-option-blurb">Noticeably tougher</span>
-        </button>
-        <button type="button" class="level-option" data-level="brutal">
-          <span class="level-option-label">Brutal</span>
-          <span class="level-option-mult">2.5×</span>
-          <span class="level-option-blurb">Not for the faint of heart</span>
-        </button>
+      <p class="level-intro">Sets how many reps or seconds each exercise asks for. Drag anywhere between two levels to land in between them. Change this anytime from the gear menu.</p>
+      <p class="level-slider-label" id="level-slider-label">Medium</p>
+      <input type="range" class="level-slider" id="level-slider" min="0" max="3" step="0.1" value="1" />
+      <div class="level-slider-ticks">
+        <span>Easy</span>
+        <span>Medium</span>
+        <span>Hard</span>
+        <span>Brutal</span>
       </div>
     </div>
   </template>
