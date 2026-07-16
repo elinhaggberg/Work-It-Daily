@@ -54,7 +54,7 @@ export const EXERCISES = [
     description: "Step forward into a lunge until both knees hit ~90°, push back to standing, then alternate legs." },
   { id: "split-squat", name: "Bulgarian split squats", category: "legs", difficulty: "intermediate", type: "reps", amount: 10,
     description: "Rear foot up on a chair behind you, front leg does the work — bend the front knee to lower, then press back up. Split evenly between legs." },
-  { id: "jump-squat", name: "Jump squats", category: "legs", difficulty: "intermediate", type: "reps", amount: 12,
+  { id: "jump-squat", name: "Jump squats", category: "legs", difficulty: "intermediate", type: "reps", amount: 20,
     description: "Squat down, then explode upward into a jump, landing softly back into the squat." },
   { id: "pistol-progression", name: "Pistol squat progression", category: "legs", difficulty: "advanced", type: "reps", amount: 6,
     challenge: true,

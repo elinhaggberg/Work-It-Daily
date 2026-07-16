@@ -2,10 +2,10 @@
 // Chosen once on Day 1, changeable anytime from Settings > Set level.
 
 export const LEVELS = [
-  { id: "easy", label: "Easy", multiplier: 0.7, blurb: "Lighter reps and shorter holds" },
+  { id: "easy", label: "Easy", multiplier: 0.5, blurb: "Lighter reps and shorter holds" },
   { id: "medium", label: "Medium", multiplier: 1, blurb: "The standard challenge" },
-  { id: "hard", label: "Hard", multiplier: 1.3, blurb: "Noticeably tougher" },
-  { id: "brutal", label: "Brutal", multiplier: 1.6, blurb: "Not for the faint of heart" },
+  { id: "hard", label: "Hard", multiplier: 1.5, blurb: "Noticeably tougher" },
+  { id: "brutal", label: "Brutal", multiplier: 2.5, blurb: "Not for the faint of heart" },
 ];
 
 export const DEFAULT_LEVEL = "medium";
