@@ -5,6 +5,7 @@ const PROGRESS_KEY = "wid_progress_v1";
 const THEME_KEY = "wid_theme_v1";
 const SOUND_KEY = "wid_sound_enabled_v1";
 const LEVEL_KEY = "wid_level_v1";
+const LAST_SEEN_VERSION_KEY = "wid_last_seen_version_v1";
 
 function readJSON(key, fallback) {
   try {
@@ -424,6 +425,17 @@ export function setLevel(id) {
   localStorage.setItem(LEVEL_KEY, id);
 }
 
+// Tracks which app version this device has already seen the "what's new"
+// notice for — stored entirely separately from progress data, so an app
+// update (or resetting this) can never touch streaks, badges, or history.
+export function getLastSeenVersion() {
+  return localStorage.getItem(LAST_SEEN_VERSION_KEY) || null;
+}
+
+export function setLastSeenVersion(version) {
+  localStorage.setItem(LAST_SEEN_VERSION_KEY, version);
+}
+
 // Wipes every trace of this app's data — streaks, badges, backup timestamps,
 // level, theme and sound prefs — back to a fresh install.
 export function resetAllData() {
@@ -431,4 +443,5 @@ export function resetAllData() {
   localStorage.removeItem(THEME_KEY);
   localStorage.removeItem(SOUND_KEY);
   localStorage.removeItem(LEVEL_KEY);
+  localStorage.removeItem(LAST_SEEN_VERSION_KEY);
 }

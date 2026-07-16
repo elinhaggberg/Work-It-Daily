@@ -345,6 +345,9 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .confirm-sheet { padding-top: 18px; gap: 10px; }
 .confirm-title { font-size: 1.15rem; }
 .confirm-message { margin: 0; color: var(--text-dim); font-size: 0.92rem; line-height: 1.5; }
+.app-updated-notes { margin: 4px 0 4px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.app-updated-notes li { font-size: 0.92rem; line-height: 1.4; }
+#app-updated-ok-btn { width: 100%; margin-top: 6px; }
 .form-actions { display: flex; gap: 10px; margin-top: 8px; }
 .form-actions .text-btn { flex: 1; text-align: center; }
 .text-btn.secondary { color: var(--text-dim); border: 1px solid var(--border); }

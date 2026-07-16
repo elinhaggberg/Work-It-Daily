@@ -11,9 +11,12 @@ import {
   resetAllData,
   getLevel,
   setLevel,
+  getLastSeenVersion,
+  setLastSeenVersion,
 } from "../storage.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
 import { DEFAULT_LEVEL, scaledExercise, getLevelInfo } from "../levels.js";
+import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
 import { shareOrDownload, filenameFor } from "../share.js";
@@ -80,6 +83,15 @@ export function renderToday(root, nav) {
     openLevelChooser();
   }
 
+  const lastSeenVersion = getLastSeenVersion();
+  if (lastSeenVersion === null) {
+    // First time this device has ever tracked a version — nothing to
+    // announce, just start tracking silently from here on.
+    setLastSeenVersion(APP_VERSION);
+  } else if (lastSeenVersion !== APP_VERSION) {
+    openAppUpdatedSheet();
+  }
+
   const banner = root.querySelector("#backup-banner");
   if (shouldShowBackupBanner()) {
     banner.classList.remove("hidden");
@@ -133,6 +145,25 @@ export function renderToday(root, nav) {
       sheet.close();
       openDeleteAllConfirm();
     });
+  }
+
+  function openAppUpdatedSheet() {
+    const sheet = openSheet("tpl-app-updated");
+    const latest = CHANGELOG[0];
+    sheet.el.querySelector(".app-updated-version").textContent = `Version ${latest.version}`;
+    const list = sheet.el.querySelector(".app-updated-notes");
+    list.replaceChildren(
+      ...latest.notes.map((note) => {
+        const li = document.createElement("li");
+        li.textContent = note;
+        return li;
+      })
+    );
+    // Marked as seen as soon as it's shown (not just on an explicit button
+    // tap) so dismissing via the backdrop doesn't leave it reappearing.
+    setLastSeenVersion(APP_VERSION);
+    sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
+    sheet.el.querySelector("#app-updated-ok-btn").addEventListener("click", () => sheet.close());
   }
 
   function openLevelChooser() {
