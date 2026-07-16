@@ -5,8 +5,7 @@ import { formatDate } from "../util.js";
 import { BADGE_TIERS } from "../storage.js";
 import { getLevelLabel } from "../levels.js";
 import { shareText } from "../share.js";
-
-const APP_LINK = "https://work-it-daily.vercel.app";
+import { buildChallengeText } from "../challenge.js";
 
 function tierIcon(badge) {
   return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
@@ -33,15 +32,6 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
   if (isRescue) lines.push("✅ Saved");
   for (const badge of newlyUnlocked) lines.push(`${tierIcon(badge)} ${badge.label}`);
   return lines.join("\n");
-}
-
-function buildChallengeText(streak) {
-  return (
-    `I challenge you! I have a ${streak} day streak on Work It Daily - can you beat me? ` +
-    `One body-weight exercise per day, at your chosen level. Open the link, choose "Share" ` +
-    `and "Save to Home Screen" (or Install). Text me your daily summary and the game is on! 🤝\n\n` +
-    APP_LINK
-  );
 }
 
 export function renderFinish(root, nav, result) {

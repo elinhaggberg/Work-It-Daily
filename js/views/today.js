@@ -19,7 +19,8 @@ import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLev
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
-import { shareOrDownload, filenameFor } from "../share.js";
+import { shareOrDownload, shareText, filenameFor } from "../share.js";
+import { buildChallengeText } from "../challenge.js";
 import { getTheme, setTheme, applyTheme } from "../theme.js";
 import { unlockAudio } from "../audio.js";
 
@@ -136,6 +137,16 @@ export function renderToday(root, nav) {
     sheet.el.querySelector("#set-level-btn").addEventListener("click", () => {
       sheet.close();
       openLevelChooser();
+    });
+    sheet.el.querySelector("#challenge-friend-menu-btn").addEventListener("click", async (e) => {
+      const label = e.currentTarget.querySelector("span:last-child");
+      const outcome = await shareText(buildChallengeText(progress.currentStreak));
+      if (outcome === "shared" || outcome === "cancelled") {
+        sheet.close();
+        return;
+      }
+      label.textContent = outcome === "copied" ? "Copied ✓" : "Couldn't share";
+      setTimeout(() => sheet.close(), 900);
     });
     sheet.el.querySelector("#export-all-btn").addEventListener("click", async () => {
       await doExport();

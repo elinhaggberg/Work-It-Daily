@@ -340,6 +340,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 }
 .menu-item:last-child { border-bottom: none; }
 .menu-item .icon { width: 1.2em; height: 1.2em; color: var(--text-dim); }
+.menu-item .icon.menu-icon-emoji { display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1; }
 .menu-item.danger-item, .menu-item.danger-item .icon { color: var(--danger); }
 
 .confirm-sheet { padding-top: 18px; gap: 10px; }
