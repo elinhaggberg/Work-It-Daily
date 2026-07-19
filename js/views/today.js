@@ -14,6 +14,7 @@ import {
   getLastSeenVersion,
   setLastSeenVersion,
 } from "../storage.js";
+import { checkOnboarding } from "../onboarding.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
 import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
@@ -87,6 +88,8 @@ export function renderToday(root, nav) {
   if (getLevel() === null) {
     openLevelChooser();
   }
+
+  checkOnboarding();
 
   const lastSeenVersion = getLastSeenVersion();
   if (lastSeenVersion === null) {

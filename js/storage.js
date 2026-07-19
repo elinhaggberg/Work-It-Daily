@@ -451,6 +451,16 @@ export function setLastSeenVersion(version) {
   localStorage.setItem(LAST_SEEN_VERSION_KEY, version);
 }
 
+const ONBOARDING_SEEN_KEY = "wid_onboarding_seen_v1";
+
+export function getOnboardingSeen() {
+  return localStorage.getItem(ONBOARDING_SEEN_KEY) === "true";
+}
+
+export function setOnboardingSeen() {
+  localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+}
+
 // Wipes every trace of this app's data — streaks, badges, backup timestamps,
 // level, theme and sound prefs — back to a fresh install.
 export function resetAllData() {
