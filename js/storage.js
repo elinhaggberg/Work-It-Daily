@@ -387,6 +387,8 @@ export function exportBackupData() {
     exportedAt: new Date().toISOString(),
     progress: raw,
     level: getLevel(),
+    theme: getThemePref(),
+    soundEnabled: getSoundEnabled(),
   };
 }
 
@@ -396,6 +398,12 @@ export function importBackupData(data) {
   }
   saveRaw({ ...defaultProgress(), ...data.progress });
   if (data.level !== undefined && data.level !== null) setLevel(data.level);
+  // Theme and sound are single current-state preferences, not part of the
+  // progress blob, so a full backup restore applies them directly rather
+  // than merging -- that's what "restore my backup" means for a device's
+  // preferences.
+  if (data.theme) setThemePref(data.theme);
+  if (typeof data.soundEnabled === "boolean") setSoundEnabled(data.soundEnabled);
   return true;
 }
 
