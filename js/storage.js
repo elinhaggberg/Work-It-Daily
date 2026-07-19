@@ -202,19 +202,19 @@ function saveRaw(progress) {
 // counters that were computed incrementally. Walks the account's full
 // history day by day, replaying the same "streak continues / freeze bridges
 // a gap / streak resets" logic that used to run inline at completion time.
-function computeStreakStats(completions) {
+function computeStreakStats(completions, asOfKey = toDateKey(new Date())) {
   const doneDates = new Set(completions.map((c) => c.date));
   const bridgedDates = new Set();
   if (completions.length === 0) {
     return { currentStreak: 0, longestStreak: 0, freezeTokens: 0, bridgedDates };
   }
 
-  const todayKey = toDateKey(new Date());
-  const startKey = completions.reduce((min, c) => (c.date < min ? c.date : min), todayKey);
+  const startKey = completions.reduce((min, c) => (c.date < min ? c.date : min), asOfKey);
   // Don't walk into "today" until it's actually been completed — otherwise a
   // pending freeze token would silently pre-bridge a day that hasn't
   // happened yet, and the displayed streak would count a day not yet done.
-  const endKey = doneDates.has(todayKey) ? todayKey : addDays(todayKey, -1);
+  // (For a past asOfKey this is moot -- it's always already either done or not.)
+  const endKey = doneDates.has(asOfKey) ? asOfKey : addDays(asOfKey, -1);
 
   if (endKey < startKey) {
     return { currentStreak: 0, longestStreak: 0, freezeTokens: 0, bridgedDates };
@@ -296,6 +296,15 @@ export function getProgress() {
     missedDates: getMissedDates(raw, stats),
     totalCompleted: raw.completions.length,
   };
+}
+
+// What the streak counter read as of a given day, rather than today --
+// lets a past day's summary show the streak it actually contributed to at
+// the time, not today's (possibly since-broken) streak.
+export function getStreakAsOf(dateKey) {
+  const raw = loadRaw();
+  const stats = computeStreakStats(raw.completions, dateKey);
+  return { currentStreak: stats.currentStreak, longestStreak: stats.longestStreak };
 }
 
 export function getTodayStatus() {

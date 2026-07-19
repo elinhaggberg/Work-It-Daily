@@ -73,6 +73,7 @@
       <button class="text-btn primary big-btn" id="start-btn">Start today's exercise</button>
       <div id="done-state" class="done-state hidden">
         <p>✅ Done for today — see you tomorrow.</p>
+        <button type="button" class="text-btn secondary" id="view-summary-btn">View summary</button>
       </div>
 
       <button type="button" class="badge-shelf" id="badge-shelf">
@@ -431,6 +432,19 @@
     </div>
   </template>
 
+  <template id="tpl-day-summary">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Summary</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="day-summary-text"></p>
+      <div class="form-actions">
+        <button type="button" class="text-btn primary day-summary-copy-btn">Copy summary</button>
+      </div>
+    </div>
+  </template>
+
   <template id="tpl-library">
     <header class="topbar">
       <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
@@ -494,6 +508,9 @@
         <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
       </header>
       <p class="confirm-message day-info-status"></p>
+      <div class="form-actions day-info-actions hidden">
+        <button type="button" class="text-btn primary day-info-summary-btn">View summary</button>
+      </div>
     </div>
   </template>
 

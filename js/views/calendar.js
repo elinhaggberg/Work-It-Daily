@@ -3,6 +3,7 @@ import { getExercise, pickExerciseForDate } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 import { unlockAudio } from "../audio.js";
+import { openDaySummarySheet } from "../daySummary.js";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -140,6 +141,13 @@ export function renderCalendar(root, nav) {
       const exercise = getExercise(completion.exerciseId);
       const label = exercise ? exercise.name : "an exercise";
       statusEl.textContent = completion.rescued ? `✅ Saved retroactively — ${label}` : `✅ Done — ${label}`;
+
+      const actions = sheet.el.querySelector(".day-info-actions");
+      actions.classList.remove("hidden");
+      actions.querySelector(".day-info-summary-btn").addEventListener("click", () => {
+        sheet.close();
+        openDaySummarySheet(dateKey);
+      });
     } else if (isBridged) {
       statusEl.textContent = "❄ Covered by a streak freeze";
     }

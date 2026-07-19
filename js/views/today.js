@@ -13,8 +13,10 @@ import {
   setLevel,
   getLastSeenVersion,
   setLastSeenVersion,
+  toDateKey,
 } from "../storage.js";
 import { checkOnboarding } from "../onboarding.js";
+import { openDaySummarySheet } from "../daySummary.js";
 import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
 import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
@@ -63,6 +65,9 @@ export function renderToday(root, nav) {
   if (doneToday) {
     startBtn.classList.add("hidden");
     doneState.classList.remove("hidden");
+    root.querySelector("#view-summary-btn").addEventListener("click", () => {
+      openDaySummarySheet(toDateKey(new Date()));
+    });
   } else {
     startBtn.classList.remove("hidden");
     doneState.classList.add("hidden");
