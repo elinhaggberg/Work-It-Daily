@@ -31,3 +31,8 @@ no account, no server.
 
 No build step — plain HTML/CSS/JS modules. Serve the folder with any static
 file server, e.g. `python3 -m http.server`, and open `index.html`.
+
+## License
+
+[GNU AGPL-3.0](LICENSE). Free to use, copy, and modify — but any version you
+distribute or run as a hosted service has to stay open source too.
