@@ -2,9 +2,16 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.4.5";
+export const APP_VERSION = "1.4.6";
 
 export const CHANGELOG = [
+  {
+    version: "1.4.6",
+    notes: [
+      "Full backups now also include your theme and sound setting, not just progress — if you've exported one before, it's worth making a fresh one",
+      "Fixed the Workout Timer link in the gear menu to point at its current home",
+    ],
+  },
   {
     version: "1.4.5",
     notes: [
