@@ -120,6 +120,10 @@ export function renderCalendar(root, nav) {
       } else if (isFuture || isBeforeAccount) {
         cell.classList.add("is-blank");
         cell.disabled = true;
+      } else if (dateKey === todayKey) {
+        // Today hasn't concluded yet, so it isn't "missed" — today's
+        // exercise is still doable from Home. Nothing to do here yet.
+        cell.disabled = true;
       } else {
         cell.classList.add("is-missed");
         cell.addEventListener("click", () => openSaveDaySheet(dateKey));

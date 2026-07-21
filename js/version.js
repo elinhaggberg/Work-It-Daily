@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.4.6";
+export const APP_VERSION = "1.4.7";
 
 export const CHANGELOG = [
+  {
+    version: "1.4.7",
+    notes: [
+      "Fixed the Calendar wrongly marking today as \"missed\" and offering to save it before the day was even over",
+    ],
+  },
   {
     version: "1.4.6",
     notes: [
