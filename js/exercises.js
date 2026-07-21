@@ -106,8 +106,13 @@ export function exercisesByCategory(categoryId) {
 const DAILY_POOL = EXERCISES.filter((e) => !e.challenge);
 const CHALLENGE_POOL = EXERCISES.filter((e) => e.challenge);
 
+// Keyed off the date's local Y/M/D rather than its raw timestamp, so the
+// index only changes at local midnight — not at UTC midnight, which for
+// timezones ahead of UTC falls in the middle of the local day and would
+// otherwise shift a date's exercise depending on what hour it's queried at
+// (e.g. a rescue built from local midnight vs. "today" queried that afternoon).
 function dayIndex(date) {
-  return Math.floor(date.getTime() / 86400000);
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 }
 
 // Deterministic "today's exercise": a stable rotation seeded by the date, so
