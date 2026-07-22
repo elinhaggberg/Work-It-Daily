@@ -75,13 +75,24 @@ if ("serviceWorker" in navigator) {
 
   // A new service worker activates in the background (it already takes
   // over immediately via skipWaiting/clients.claim) but an already-open tab
-  // keeps running the JS it loaded at open time regardless -- without this,
-  // a fix can finish deploying mid-session and the open tab won't actually
-  // run it until the user manually force-closes and reopens the app.
-  let refreshedOnce = false;
+  // keeps running the JS it loaded at open time regardless -- so it needs a
+  // reload to actually pick up the new code. But reloading the instant that
+  // happens would yank away whatever's on screen (the "App updated" notice
+  // itself, or a workout in progress) at a moment the update has nothing to
+  // do with. Instead, reload only once it's safe: right away if the tab is
+  // already backgrounded, or the next time it gets backgrounded if it's in
+  // front of you right now -- so it's simply fresh again by the time you
+  // come back, the same as a normal reopen.
+  let updatePending = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (refreshedOnce) return;
-    refreshedOnce = true;
-    window.location.reload();
+    if (updatePending) return;
+    updatePending = true;
+    if (document.hidden) {
+      window.location.reload();
+    } else {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) window.location.reload();
+      });
+    }
   });
 }
