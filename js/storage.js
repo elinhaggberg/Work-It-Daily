@@ -1,4 +1,4 @@
-import { pickExerciseForDate } from "./exercises.js";
+import { pickExerciseForDate, pickChallengeForDate } from "./exercises.js";
 import { scaleAmount, RESCUE_PENALTY_MULTIPLIER, LEVEL_ID_TO_VALUE } from "./levels.js";
 
 const PROGRESS_KEY = "wid_progress_v1";
@@ -173,6 +173,7 @@ export function getMilestoneShelfInfo(longestStreak, unlockedBadges) {
 function defaultProgress() {
   return {
     completions: [], // [{ date, exerciseId, category, rescued }]
+    challengeCompletions: [], // [{ date, exerciseId, category }] -- the optional weekly bonus
     unlockedBadges: [], // badge ids
     lastBackupAt: null,
     backupBannerDismissedAt: null,
@@ -312,8 +313,22 @@ export function getTodayStatus() {
   const todayKey = toDateKey(new Date());
   return {
     doneToday: progress.completions.some((c) => c.date === todayKey),
+    challengeDoneToday: progress.challengeCompletions.some((c) => c.date === todayKey),
     progress,
   };
+}
+
+// The streak value used to decide whether today is eligible for the bonus
+// "weekly challenge" exercise (every 7th day of an active streak). Pinned to
+// yesterday's streak so it stays stable for the whole day regardless of
+// whether today's own exercise has already been completed -- otherwise
+// completing today's regular exercise first would bump the streak to
+// already include today and silently take the bonus off the table before
+// it had even been attempted.
+export function getStreakBaseForToday() {
+  const raw = loadRaw();
+  const todayKey = toDateKey(new Date());
+  return computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
 }
 
 // Records today's completion, updating the streak, freeze tokens, totals,
@@ -341,6 +356,25 @@ export function completeToday(exercise) {
   return { progress: getProgress(), newlyUnlocked, usedFreeze };
 }
 
+// Records the optional weekly bonus challenge exercise for today. Kept
+// entirely separate from the regular completions list -- it never touches
+// the streak, freezes, or badges, since it's extra credit on top of (never
+// instead of) today's real exercise. Safe to call multiple times; only the
+// first call per day does anything.
+export function completeChallenge(exercise) {
+  const raw = loadRaw();
+  const todayKey = toDateKey(new Date());
+  if (raw.challengeCompletions.some((c) => c.date === todayKey)) return null;
+
+  const streakBase = computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
+  const { isChallengeDay } = pickChallengeForDate(new Date(), streakBase);
+  if (!isChallengeDay) return null;
+
+  raw.challengeCompletions.push({ date: todayKey, exerciseId: exercise.id, category: exercise.category });
+  saveRaw(raw);
+  return getProgress();
+}
+
 // Retroactively completes a past missed day with a harder makeup exercise,
 // so it counts toward the streak instead of leaving a gap. Returns null if
 // the day isn't eligible (already done, or not in the past).
@@ -350,7 +384,7 @@ export function saveDay(dateKey, level) {
   if (dateKey >= todayKey) return null;
   if (raw.completions.some((c) => c.date === dateKey)) return null;
 
-  const { exercise } = pickExerciseForDate(new Date(`${dateKey}T00:00:00`), 0);
+  const exercise = pickExerciseForDate(new Date(`${dateKey}T00:00:00`));
   const amount = scaleAmount(exercise, level, RESCUE_PENALTY_MULTIPLIER);
 
   raw.completions.push({ date: dateKey, exerciseId: exercise.id, category: exercise.category, rescued: true });

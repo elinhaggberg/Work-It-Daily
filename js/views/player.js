@@ -1,5 +1,13 @@
-import { getTodayStatus, completeToday, saveDay, getSoundEnabled, setSoundEnabled, getLevel } from "../storage.js";
-import { pickExerciseForDate } from "../exercises.js";
+import {
+  completeToday,
+  saveDay,
+  completeChallenge,
+  getSoundEnabled,
+  setSoundEnabled,
+  getLevel,
+  getStreakBaseForToday,
+} from "../storage.js";
+import { pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
 import { scaledExercise, DEFAULT_LEVEL, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
 import { formatClock, formatDate } from "../util.js";
 import * as audio from "../audio.js";
@@ -10,15 +18,23 @@ const LEAD_IN_SECONDS = 3;
 const WARNING_SECONDS = 3;
 const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 
-export function renderPlayer(root, nav, rescueDateKey = null) {
+export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = false) {
   const levelValue = getLevel() ?? DEFAULT_LEVEL;
 
   let baseExercise;
   if (rescueDateKey) {
-    ({ exercise: baseExercise } = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`), 0));
+    baseExercise = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`));
+  } else if (isChallenge) {
+    const { exercise, isChallengeDay } = pickChallengeForDate(new Date(), getStreakBaseForToday());
+    if (!isChallengeDay || !exercise) {
+      // No longer eligible (streak changed, or this got opened stale) --
+      // nothing to play, just head back rather than show a broken screen.
+      nav.toToday();
+      return;
+    }
+    baseExercise = exercise;
   } else {
-    const { progress } = getTodayStatus();
-    ({ exercise: baseExercise } = pickExerciseForDate(new Date(), progress.currentStreak));
+    baseExercise = pickExerciseForDate(new Date());
   }
   const exercise = scaledExercise(baseExercise, levelValue, rescueDateKey ? RESCUE_PENALTY_MULTIPLIER : 1);
 
@@ -29,6 +45,11 @@ export function renderPlayer(root, nav, rescueDateKey = null) {
   if (rescueDateKey) {
     rescueBannerEl.textContent = `⚠️ Saving ${formatDate(`${rescueDateKey}T00:00:00`)} — ${RESCUE_PENALTY_MULTIPLIER}× penalty`;
     rescueBannerEl.classList.remove("hidden");
+  }
+
+  const challengeBannerEl = root.querySelector("#challenge-player-banner");
+  if (isChallenge) {
+    challengeBannerEl.classList.remove("hidden");
   }
 
   const exerciseNameEl = root.querySelector("#exercise-name");
@@ -148,6 +169,15 @@ export function renderPlayer(root, nav, rescueDateKey = null) {
         isRescue: true,
         rescueDateKey,
       });
+      return;
+    }
+
+    if (isChallenge) {
+      // A bonus extra, not the day's real completion -- no streak/badge
+      // change to celebrate, so just head back rather than route through the
+      // full finish screen built for the daily flow.
+      completeChallenge(exercise);
+      nav.toToday();
       return;
     }
 

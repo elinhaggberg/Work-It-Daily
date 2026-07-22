@@ -117,13 +117,17 @@ function dayIndex(date) {
 
 // Deterministic "today's exercise": a stable rotation seeded by the date, so
 // it's the same all day regardless of reloads and doesn't need a server.
-// Every 7th day of an active streak pulls from the harder challenge pool
-// instead, as a weekly milestone move.
-export function pickExerciseForDate(date, currentStreak) {
+export function pickExerciseForDate(date) {
   const idx = dayIndex(date);
-  const isChallengeDay = currentStreak > 0 && (currentStreak + 1) % 7 === 0;
-  if (isChallengeDay && CHALLENGE_POOL.length > 0) {
-    return { exercise: CHALLENGE_POOL[idx % CHALLENGE_POOL.length], isChallengeDay: true };
-  }
-  return { exercise: DAILY_POOL[idx % DAILY_POOL.length], isChallengeDay: false };
+  return DAILY_POOL[idx % DAILY_POOL.length];
+}
+
+// Every 7th day of an active streak (7, 14, 21, ...) additionally unlocks a
+// harder move from the challenge pool -- on top of the regular daily
+// exercise above, not instead of it.
+export function pickChallengeForDate(date, streakBase) {
+  const isChallengeDay = streakBase > 0 && (streakBase + 1) % 7 === 0;
+  if (!isChallengeDay || CHALLENGE_POOL.length === 0) return { exercise: null, isChallengeDay: false };
+  const idx = dayIndex(date);
+  return { exercise: CHALLENGE_POOL[idx % CHALLENGE_POOL.length], isChallengeDay: true };
 }

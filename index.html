@@ -60,7 +60,6 @@
       </div>
 
       <div class="card exercise-card" id="exercise-card">
-        <div id="challenge-banner" class="challenge-banner hidden">⭐ Weekly challenge</div>
         <div class="exercise-meta-row">
           <p class="exercise-category"></p>
           <span class="exercise-level-tag"></span>
@@ -74,6 +73,22 @@
       <div id="done-state" class="done-state hidden">
         <p>✅ Done for today — see you tomorrow.</p>
         <button type="button" class="text-btn secondary" id="view-summary-btn">View summary</button>
+      </div>
+
+      <div class="card exercise-card challenge-card hidden" id="challenge-card">
+        <div class="challenge-banner">⭐ Weekly challenge</div>
+        <div class="exercise-meta-row">
+          <p class="exercise-category"></p>
+          <span class="exercise-level-tag"></span>
+        </div>
+        <h2 class="exercise-name"></h2>
+        <p class="exercise-amount"></p>
+        <p class="exercise-description"></p>
+      </div>
+
+      <button class="text-btn primary big-btn challenge-btn hidden" id="challenge-start-btn">Start weekly challenge</button>
+      <div id="challenge-done-state" class="done-state hidden">
+        <p>✅ Weekly challenge done — nice extra work!</p>
       </div>
 
       <button type="button" class="badge-shelf" id="badge-shelf">
@@ -384,6 +399,7 @@
     </header>
     <div class="player-stage">
       <p class="rescue-banner hidden" id="rescue-banner"></p>
+      <p class="challenge-player-banner hidden" id="challenge-player-banner">⭐ Weekly challenge — bonus, on top of today's exercise</p>
       <p class="interval-name" id="exercise-name"></p>
       <div class="stage-display" id="stage-display">
         <div class="countdown-ring hidden" id="countdown-ring" aria-hidden="true">

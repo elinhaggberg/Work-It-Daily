@@ -17,6 +17,9 @@ const nav = {
   toPlayer: (rescueDateKey) => {
     location.hash = rescueDateKey ? `#/play/rescue/${rescueDateKey}` : "#/play";
   },
+  toChallengePlayer: () => {
+    location.hash = "#/play/challenge";
+  },
   toFinish: (result) => {
     pendingFinishResult = result;
     location.hash = "#/finish";
@@ -37,7 +40,8 @@ function route() {
     case "play": {
       const parts = hash.replace(/^#\//, "").split("/");
       const rescueDateKey = parts[1] === "rescue" ? parts[2] : null;
-      renderPlayer(root, nav, rescueDateKey);
+      const isChallenge = parts[1] === "challenge";
+      renderPlayer(root, nav, rescueDateKey, isChallenge);
       break;
     }
     case "finish":

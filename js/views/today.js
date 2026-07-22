@@ -1,5 +1,6 @@
 import {
   getTodayStatus,
+  getStreakBaseForToday,
   BADGE_TIERS,
   getAllBadges,
   getMilestoneShelfInfo,
@@ -17,7 +18,7 @@ import {
 } from "../storage.js";
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
-import { pickExerciseForDate, CATEGORIES } from "../exercises.js";
+import { pickExerciseForDate, pickChallengeForDate, CATEGORIES } from "../exercises.js";
 import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
@@ -31,8 +32,9 @@ export function renderToday(root, nav) {
   const tpl = document.getElementById("tpl-today");
   root.replaceChildren(tpl.content.cloneNode(true));
 
-  const { doneToday, progress } = getTodayStatus();
-  const { exercise: baseExercise, isChallengeDay } = pickExerciseForDate(new Date(), progress.currentStreak);
+  const { doneToday, challengeDoneToday, progress } = getTodayStatus();
+  const baseExercise = pickExerciseForDate(new Date());
+  const { exercise: challengeBaseExercise, isChallengeDay } = pickChallengeForDate(new Date(), getStreakBaseForToday());
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });
 
@@ -57,9 +59,6 @@ export function renderToday(root, nav) {
   }
   renderExerciseCard(getLevel() ?? DEFAULT_LEVEL);
 
-  const challengeBadge = root.querySelector("#challenge-banner");
-  challengeBadge.classList.toggle("hidden", !isChallengeDay);
-
   const startBtn = root.querySelector("#start-btn");
   const doneState = root.querySelector("#done-state");
   if (doneToday) {
@@ -75,6 +74,40 @@ export function renderToday(root, nav) {
       unlockAudio();
       nav.toPlayer();
     });
+  }
+
+  // The weekly challenge is an extra, optional exercise on top of the
+  // regular one above -- not a swap -- so it gets its own card, its own
+  // start button, and its own done state.
+  const challengeCard = root.querySelector("#challenge-card");
+  const challengeStartBtn = root.querySelector("#challenge-start-btn");
+  const challengeDoneState = root.querySelector("#challenge-done-state");
+  function renderChallengeCard(levelValue) {
+    if (!isChallengeDay) return;
+    const exercise = scaledExercise(challengeBaseExercise, levelValue);
+    const category = CATEGORIES.find((c) => c.id === exercise.category);
+    challengeCard.querySelector(".exercise-category").textContent = category ? category.label : exercise.category;
+    challengeCard.querySelector(".exercise-level-tag").textContent = getLevelLabel(levelValue);
+    challengeCard.querySelector(".exercise-name").textContent = exercise.name;
+    challengeCard.querySelector(".exercise-amount").textContent =
+      exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
+    challengeCard.querySelector(".exercise-description").textContent = exercise.description;
+  }
+  renderChallengeCard(getLevel() ?? DEFAULT_LEVEL);
+
+  challengeCard.classList.toggle("hidden", !isChallengeDay);
+  if (isChallengeDay) {
+    if (challengeDoneToday) {
+      challengeStartBtn.classList.add("hidden");
+      challengeDoneState.classList.remove("hidden");
+    } else {
+      challengeStartBtn.classList.remove("hidden");
+      challengeDoneState.classList.add("hidden");
+      challengeStartBtn.addEventListener("click", () => {
+        unlockAudio();
+        nav.toChallengePlayer();
+      });
+    }
   }
 
   root.querySelector("#library-btn").addEventListener("click", () => nav.toLibrary());
@@ -220,6 +253,7 @@ export function renderToday(root, nav) {
       setLevel(value);
       labelEl.textContent = getLevelLabel(value);
       renderExerciseCard(value);
+      renderChallengeCard(value);
     });
   }
 
