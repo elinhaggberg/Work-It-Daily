@@ -67,6 +67,21 @@ route();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+    navigator.serviceWorker
+      .register("service-worker.js")
+      .then((reg) => reg.update())
+      .catch(() => {});
+  });
+
+  // A new service worker activates in the background (it already takes
+  // over immediately via skipWaiting/clients.claim) but an already-open tab
+  // keeps running the JS it loaded at open time regardless -- without this,
+  // a fix can finish deploying mid-session and the open tab won't actually
+  // run it until the user manually force-closes and reopens the app.
+  let refreshedOnce = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshedOnce) return;
+    refreshedOnce = true;
+    window.location.reload();
   });
 }

@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.5.0";
+export const APP_VERSION = "1.5.1";
 
 export const CHANGELOG = [
+  {
+    version: "1.5.1",
+    notes: [
+      "Fixed updates sometimes not showing up until you fully closed and reopened the app — it now refreshes itself automatically once a new version finishes installing in the background",
+    ],
+  },
   {
     version: "1.5.0",
     notes: [
