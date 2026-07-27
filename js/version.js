@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.5.2";
+export const APP_VERSION = "1.5.3";
 
 export const CHANGELOG = [
+  {
+    version: "1.5.3",
+    notes: [
+      "Daily exercise rotation now alternates muscle groups instead of running 5 straight days of the same category — kicks in from tomorrow, without changing anything already shown",
+    ],
+  },
   {
     version: "1.5.2",
     notes: [

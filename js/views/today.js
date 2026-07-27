@@ -1,6 +1,7 @@
 import {
   getTodayStatus,
   getStreakBaseForToday,
+  getRecentCategories,
   BADGE_TIERS,
   getAllBadges,
   getMilestoneShelfInfo,
@@ -18,7 +19,7 @@ import {
 } from "../storage.js";
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
-import { pickExerciseForDate, pickChallengeForDate, CATEGORIES } from "../exercises.js";
+import { pickExerciseForDate, pickChallengeForDate, RECENT_LOOKBACK_DAYS, CATEGORIES } from "../exercises.js";
 import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
@@ -33,7 +34,7 @@ export function renderToday(root, nav) {
   root.replaceChildren(tpl.content.cloneNode(true));
 
   const { doneToday, challengeDoneToday, progress } = getTodayStatus();
-  const baseExercise = pickExerciseForDate(new Date());
+  const baseExercise = pickExerciseForDate(new Date(), getRecentCategories(RECENT_LOOKBACK_DAYS));
   const { exercise: challengeBaseExercise, isChallengeDay } = pickChallengeForDate(new Date(), getStreakBaseForToday());
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });

@@ -331,6 +331,16 @@ export function getStreakBaseForToday() {
   return computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
 }
 
+// Categories completed on any of the last `days` calendar days (not
+// counting today) -- used to steer today's pick away from immediately
+// repeating a category that's just been done.
+export function getRecentCategories(days) {
+  const raw = loadRaw();
+  const todayKey = toDateKey(new Date());
+  const cutoff = addDays(todayKey, -days);
+  return raw.completions.filter((c) => c.date >= cutoff && c.date < todayKey).map((c) => c.category);
+}
+
 // Records today's completion, updating the streak, freeze tokens, totals,
 // and any newly unlocked badges. Safe to call multiple times for the same
 // day (only the first call per day changes anything).

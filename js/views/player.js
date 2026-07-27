@@ -6,8 +6,9 @@ import {
   setSoundEnabled,
   getLevel,
   getStreakBaseForToday,
+  getRecentCategories,
 } from "../storage.js";
-import { pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
+import { pickExerciseForDate, pickChallengeForDate, RECENT_LOOKBACK_DAYS } from "../exercises.js";
 import { scaledExercise, DEFAULT_LEVEL, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
 import { formatClock, formatDate } from "../util.js";
 import * as audio from "../audio.js";
@@ -34,7 +35,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     }
     baseExercise = exercise;
   } else {
-    baseExercise = pickExerciseForDate(new Date());
+    baseExercise = pickExerciseForDate(new Date(), getRecentCategories(RECENT_LOOKBACK_DAYS));
   }
   const exercise = scaledExercise(baseExercise, levelValue, rescueDateKey ? RESCUE_PENALTY_MULTIPLIER : 1);
 
