@@ -103,22 +103,89 @@ export function exercisesByCategory(categoryId) {
   return EXERCISES.filter((e) => e.category === categoryId);
 }
 
-const DAILY_POOL = EXERCISES.filter((e) => !e.challenge);
+// The legacy pool is just EXERCISES in source order, which groups every
+// exercise by category for readability -- so the old date-indexed rotation
+// below used to walk through 5 straight push days, then 5 pull, etc. every
+// ~22 days. LEGACY_DAILY_POOL is kept exactly as before (and still used for
+// any date before the cutover below) so history and already-shown days
+// never change retroactively; DAILY_POOL is the same set of exercises
+// reordered round-robin by category so the day-to-day rotation actually
+// alternates muscle groups.
+const LEGACY_DAILY_POOL = EXERCISES.filter((e) => !e.challenge);
 const CHALLENGE_POOL = EXERCISES.filter((e) => e.challenge);
 
+function interleaveByCategory(pool) {
+  const byCategory = new Map();
+  for (const exercise of pool) {
+    if (!byCategory.has(exercise.category)) byCategory.set(exercise.category, []);
+    byCategory.get(exercise.category).push(exercise);
+  }
+  const buckets = [...byCategory.values()];
+  const maxLen = Math.max(...buckets.map((b) => b.length));
+  const result = [];
+  for (let i = 0; i < maxLen; i++) {
+    for (const bucket of buckets) {
+      if (bucket[i]) result.push(bucket[i]);
+    }
+  }
+  return result;
+}
+
+const DAILY_POOL = interleaveByCategory(LEGACY_DAILY_POOL);
+
+// The mixed rotation only applies from this date on -- dates before it keep
+// using the legacy pool, so today's already-decided exercise (and all of
+// history) can't change retroactively out from under anyone.
+const ROTATION_V2_START = "2026-07-28";
+
+// How many days back "today"'s pick avoids repeating -- see recentExerciseIds
+// below.
+export const RECENT_LOOKBACK_DAYS = 3;
+
+function localDateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// Keyed off the date's local Y/M/D rather than its raw timestamp, so the
+// index only changes at local midnight — not at UTC midnight, which for
+// timezones ahead of UTC falls in the middle of the local day and would
+// otherwise shift a date's exercise depending on what hour it's queried at
+// (e.g. a rescue built from local midnight vs. "today" queried that afternoon).
 function dayIndex(date) {
-  return Math.floor(date.getTime() / 86400000);
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 }
 
 // Deterministic "today's exercise": a stable rotation seeded by the date, so
 // it's the same all day regardless of reloads and doesn't need a server.
-// Every 7th day of an active streak pulls from the harder challenge pool
-// instead, as a weekly milestone move.
-export function pickExerciseForDate(date, currentStreak) {
-  const idx = dayIndex(date);
-  const isChallengeDay = currentStreak > 0 && (currentStreak + 1) % 7 === 0;
-  if (isChallengeDay && CHALLENGE_POOL.length > 0) {
-    return { exercise: CHALLENGE_POOL[idx % CHALLENGE_POOL.length], isChallengeDay: true };
+// `recentCategories` (optional -- only the live "today" pick bothers with
+// it) steers away from any category done in roughly the last few days, so
+// the mixed rotation below doesn't kick off by immediately repeating
+// whatever category the old grouped one had just been running for days.
+export function pickExerciseForDate(date, recentCategories = []) {
+  if (localDateKey(date) < ROTATION_V2_START) {
+    const idx = dayIndex(date);
+    return LEGACY_DAILY_POOL[idx % LEGACY_DAILY_POOL.length];
   }
-  return { exercise: DAILY_POOL[idx % DAILY_POOL.length], isChallengeDay: false };
+
+  const cutoverIdx = dayIndex(new Date(`${ROTATION_V2_START}T00:00:00`));
+  const offset = dayIndex(date) - cutoverIdx;
+  let idx = ((offset % DAILY_POOL.length) + DAILY_POOL.length) % DAILY_POOL.length;
+
+  for (let tries = 0; tries < DAILY_POOL.length && recentCategories.includes(DAILY_POOL[idx].category); tries++) {
+    idx = (idx + 1) % DAILY_POOL.length;
+  }
+  return DAILY_POOL[idx];
+}
+
+// Every 7th day of an active streak (7, 14, 21, ...) additionally unlocks a
+// harder move from the challenge pool -- on top of the regular daily
+// exercise above, not instead of it.
+export function pickChallengeForDate(date, streakBase) {
+  const isChallengeDay = streakBase > 0 && (streakBase + 1) % 7 === 0;
+  if (!isChallengeDay || CHALLENGE_POOL.length === 0) return { exercise: null, isChallengeDay: false };
+  const idx = dayIndex(date);
+  return { exercise: CHALLENGE_POOL[idx % CHALLENGE_POOL.length], isChallengeDay: true };
 }

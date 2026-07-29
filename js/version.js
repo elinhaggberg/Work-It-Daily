@@ -2,9 +2,45 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.4.6";
+export const APP_VERSION = "1.5.3";
 
 export const CHANGELOG = [
+  {
+    version: "1.5.3",
+    notes: [
+      "Daily exercise rotation now alternates muscle groups instead of running 5 straight days of the same category — kicks in from tomorrow, without changing anything already shown",
+    ],
+  },
+  {
+    version: "1.5.2",
+    notes: [
+      "Fixed the \"App updated\" notice sometimes flashing away before you could read it — the app no longer reloads itself while you're actively using it, only once it's safely in the background",
+    ],
+  },
+  {
+    version: "1.5.1",
+    notes: [
+      "Fixed updates sometimes not showing up until you fully closed and reopened the app — it now refreshes itself automatically once a new version finishes installing in the background",
+    ],
+  },
+  {
+    version: "1.5.0",
+    notes: [
+      "Weekly challenge is now an extra bonus exercise on top of your regular one, not a swap — your normal daily exercise always stays put",
+    ],
+  },
+  {
+    version: "1.4.8",
+    notes: [
+      "Fixed the exercise rotation shifting by a day in timezones ahead of UTC, so a saved missed day now always matches the exercise that actually showed up that day",
+    ],
+  },
+  {
+    version: "1.4.7",
+    notes: [
+      "Fixed the Calendar wrongly marking today as \"missed\" and offering to save it before the day was even over",
+    ],
+  },
   {
     version: "1.4.6",
     notes: [

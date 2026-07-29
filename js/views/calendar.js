@@ -19,11 +19,10 @@ function formatLongDate(dateKey) {
 }
 
 // The same makeup exercise saveDay() will assign for this date — the base
-// daily-pool rotation, ignoring streak/challenge logic (a rescue is already
-// harder via the penalty multiplier, so it doesn't also roll a challenge move).
+// daily-pool rotation (a rescue is already harder via the penalty
+// multiplier, so it doesn't also roll the bonus weekly challenge).
 function makeupExerciseFor(dateKey) {
-  const { exercise } = pickExerciseForDate(new Date(`${dateKey}T00:00:00`), 0);
-  return exercise;
+  return pickExerciseForDate(new Date(`${dateKey}T00:00:00`));
 }
 
 export function renderCalendar(root, nav) {
@@ -119,6 +118,10 @@ export function renderCalendar(root, nav) {
         cell.addEventListener("click", () => openDayInfoSheet(dateKey, null, true));
       } else if (isFuture || isBeforeAccount) {
         cell.classList.add("is-blank");
+        cell.disabled = true;
+      } else if (dateKey === todayKey) {
+        // Today hasn't concluded yet, so it isn't "missed" — today's
+        // exercise is still doable from Home. Nothing to do here yet.
         cell.disabled = true;
       } else {
         cell.classList.add("is-missed");

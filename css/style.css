@@ -265,6 +265,20 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
   color: var(--accent-2);
 }
 
+.challenge-card { border-color: color-mix(in srgb, var(--accent-2) 45%, var(--border)); }
+.text-btn.primary.challenge-btn { background: var(--accent-2); color: #fff; }
+
+.challenge-player-banner {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent-2) 20%, transparent);
+  color: var(--accent-2);
+}
+
 .done-state {
   width: 100%;
   padding: 16px;
