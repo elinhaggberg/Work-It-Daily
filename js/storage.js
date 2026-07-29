@@ -401,11 +401,49 @@ export function exportBackupData() {
   };
 }
 
+// A malformed or hand-edited backup file shouldn't be able to wedge the app
+// permanently -- computeStreakStats() runs on every load and assumes
+// completions is an array of well-shaped entries, so garbage written
+// straight through here would throw on every future render, not just this
+// import. Anything that doesn't match the expected shape is dropped rather
+// than accepted, same "never trust the file" treatment as the other apps'
+// importData already gives their own list fields.
+function sanitizeProgress(incoming) {
+  const source = incoming && typeof incoming === "object" ? incoming : {};
+
+  const completions = Array.isArray(source.completions)
+    ? source.completions
+        .filter(
+          (c) =>
+            c &&
+            typeof c === "object" &&
+            typeof c.date === "string" &&
+            typeof c.exerciseId === "string" &&
+            typeof c.category === "string"
+        )
+        .map((c) => ({ date: c.date, exerciseId: c.exerciseId, category: c.category, rescued: c.rescued === true }))
+    : [];
+
+  const unlockedBadges = Array.isArray(source.unlockedBadges)
+    ? source.unlockedBadges.filter((b) => typeof b === "string")
+    : [];
+
+  const asTimestampOrNull = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+  return {
+    completions,
+    unlockedBadges,
+    lastBackupAt: asTimestampOrNull(source.lastBackupAt),
+    backupBannerDismissedAt: asTimestampOrNull(source.backupBannerDismissedAt),
+    firstOpenAt: asTimestampOrNull(source.firstOpenAt) ?? Date.now(),
+  };
+}
+
 export function importBackupData(data) {
   if (!data || data.type !== "work-it-daily-backup" || !data.progress) {
     throw new Error("That doesn't look like a Work It Daily backup file.");
   }
-  saveRaw({ ...defaultProgress(), ...data.progress });
+  saveRaw({ ...defaultProgress(), ...sanitizeProgress(data.progress) });
   if (data.level !== undefined && data.level !== null) setLevel(data.level);
   // Theme and sound are single current-state preferences, not part of the
   // progress blob, so a full backup restore applies them directly rather
