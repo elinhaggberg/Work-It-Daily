@@ -468,6 +468,19 @@ function sanitizeProgress(incoming) {
         .map((c) => ({ date: c.date, exerciseId: c.exerciseId, category: c.category, rescued: c.rescued === true }))
     : [];
 
+  const challengeCompletions = Array.isArray(source.challengeCompletions)
+    ? source.challengeCompletions
+        .filter(
+          (c) =>
+            c &&
+            typeof c === "object" &&
+            typeof c.date === "string" &&
+            typeof c.exerciseId === "string" &&
+            typeof c.category === "string"
+        )
+        .map((c) => ({ date: c.date, exerciseId: c.exerciseId, category: c.category }))
+    : [];
+
   const unlockedBadges = Array.isArray(source.unlockedBadges)
     ? source.unlockedBadges.filter((b) => typeof b === "string")
     : [];
@@ -476,6 +489,7 @@ function sanitizeProgress(incoming) {
 
   return {
     completions,
+    challengeCompletions,
     unlockedBadges,
     lastBackupAt: asTimestampOrNull(source.lastBackupAt),
     backupBannerDismissedAt: asTimestampOrNull(source.backupBannerDismissedAt),
