@@ -202,6 +202,10 @@ export function renderToday(root, nav) {
       sheet.close();
       openWorkoutTimerPromo();
     });
+    sheet.el.querySelector("#app-library-link-btn").addEventListener("click", () => {
+      sheet.close();
+      openAppLibraryPromo();
+    });
     sheet.el.querySelector("#delete-all-btn").addEventListener("click", () => {
       sheet.close();
       openDeleteAllConfirm();
@@ -210,6 +214,11 @@ export function renderToday(root, nav) {
 
   function openWorkoutTimerPromo() {
     const sheet = openSheet("tpl-promo-workout-timer");
+    sheet.el.querySelector(".cancel-btn").addEventListener("click", () => sheet.close());
+  }
+
+  function openAppLibraryPromo() {
+    const sheet = openSheet("tpl-app-library-promo");
     sheet.el.querySelector(".cancel-btn").addEventListener("click", () => sheet.close());
   }
 

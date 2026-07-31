@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.5.3";
+export const APP_VERSION = "1.5.4";
 
 export const CHANGELOG = [
+  {
+    version: "1.5.4",
+    notes: [
+      "Added an App Library link in the gear menu, pointing to the Make it Local App Library of sibling apps",
+    ],
+  },
   {
     version: "1.5.3",
     notes: [
