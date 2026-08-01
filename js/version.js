@@ -2,9 +2,16 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.5.4";
+export const APP_VERSION = "1.6.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.6.0",
+    notes: [
+      "Reworked how missing a day actually plays out: a miss now gets exactly one day to be rescued with a makeup exercise before its fate is decided. Once that day's gone, a streak freeze (if you have one) automatically covers it — otherwise the streak breaks there for good. Saving a missed day from the Calendar now only works for yesterday, rather than any old gap.",
+      "Timer-based exercises (holds like Plank) no longer auto-finish the instant the countdown hits zero — like rep-based exercises, you now tap Done yourself. The small clock up top keeps running past zero if you want to push a hold longer than the target.",
+    ],
+  },
   {
     version: "1.5.4",
     notes: [

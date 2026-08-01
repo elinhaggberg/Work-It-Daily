@@ -737,6 +737,8 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .calendar-day.is-frozen .calendar-day-dot { background: var(--accent-2); }
 .calendar-day.is-missed .calendar-day-dot { background: var(--danger); }
 .calendar-day.is-missed { background: color-mix(in srgb, var(--danger) 12%, var(--surface-2)); }
+.calendar-day.is-lost .calendar-day-dot { background: var(--text-dim); }
+.calendar-day.is-lost .calendar-day-num { opacity: 0.5; }
 .calendar-day.is-blank { background: transparent; }
 .calendar-day.is-blank .calendar-day-num { color: var(--text-dim); opacity: 0.4; }
 
@@ -747,6 +749,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .legend-dot.is-rescued { background: #a78bfa; }
 .legend-dot.is-frozen { background: var(--accent-2); }
 .legend-dot.is-missed { background: var(--danger); }
+.legend-dot.is-lost { background: var(--text-dim); }
 
 /* Save-day sheet */
 .save-day-exercise { font-weight: 700; margin: 10px 0 4px; }

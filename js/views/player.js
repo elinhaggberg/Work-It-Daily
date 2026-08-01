@@ -65,7 +65,6 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   const totalTimerEl = root.querySelector("#total-timer");
 
   exerciseNameEl.textContent = exercise.name;
-  doneBtn.classList.toggle("hidden", exercise.type !== "reps");
 
   const state = {
     phase: "countdown",
@@ -74,6 +73,11 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     totalElapsed: 0,
     running: false,
     started: false,
+    // Reps exercises always end with a manual tap; a timer exercise reaches
+    // this same manual-done state once its countdown hits zero, instead of
+    // auto-finishing -- the countdown hitting 0 is a target, not a hard
+    // stop, so the total clock above keeps running if they want to push on.
+    timerDone: false,
   };
 
   let tickHandle = null;
@@ -134,13 +138,14 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
         audio.intervalStart();
         state.phase = "active";
       }
-    } else if (exercise.type === "timer") {
+    } else if (exercise.type === "timer" && !state.timerDone) {
       state.remaining -= 1;
       if (state.remaining > 0) {
         if (state.remaining <= WARNING_SECONDS) audio.countdownTick();
       } else {
-        finish();
-        return;
+        state.remaining = 0;
+        state.timerDone = true;
+        audio.intervalEnd();
       }
     }
     render();
@@ -204,6 +209,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   function render() {
     totalTimerEl.textContent = formatClock(state.totalElapsed);
     playPauseBtn.innerHTML = state.running ? ICON_PAUSE : ICON_PLAY;
+    doneBtn.classList.toggle("hidden", exercise.type === "timer" ? !state.timerDone : false);
 
     if (!state.started && state.phase === "countdown") {
       countdownRingEl.classList.add("hidden");
@@ -221,8 +227,13 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       countdownRingEl.classList.add("hidden");
       bigNumberEl.classList.remove("hidden");
       bigNumberEl.textContent = formatClock(state.remaining);
-      bigNumberEl.className = "big-number" + (state.remaining <= WARNING_SECONDS ? " countdown" : "");
-      bigLabelEl.textContent = "seconds left";
+      if (state.timerDone) {
+        bigNumberEl.className = "big-number reps-mode";
+        bigLabelEl.textContent = "time's up — tap done, or keep going for extra";
+      } else {
+        bigNumberEl.className = "big-number" + (state.remaining <= WARNING_SECONDS ? " countdown" : "");
+        bigLabelEl.textContent = "seconds left";
+      }
     } else {
       countdownRingEl.classList.add("hidden");
       bigNumberEl.classList.remove("hidden");

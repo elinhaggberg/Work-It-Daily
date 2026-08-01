@@ -27,7 +27,7 @@ export function toDateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
-function addDays(dateKey, n) {
+export function addDays(dateKey, n) {
   const d = new Date(`${dateKey}T00:00:00`);
   d.setDate(d.getDate() + n);
   return toDateKey(d);
@@ -203,6 +203,15 @@ function saveRaw(progress) {
 // counters that were computed incrementally. Walks the account's full
 // history day by day, replaying the same "streak continues / freeze bridges
 // a gap / streak resets" logic that used to run inline at completion time.
+//
+// A missed day gets exactly one full day of grace (the day right after it)
+// to be rescued with a makeup exercise before its fate is decided -- see
+// saveDay(), which is the only way a completion dated in the past gets
+// added, and only accepts yesterday. Only once that grace day has itself
+// fully elapsed does a miss get automatically bridged by a freeze token (if
+// one's available) or, if not, permanently break the streak right there --
+// so what freezes is always the *oldest* still-open miss, one grace period
+// behind whatever's currently rescuable.
 function computeStreakStats(completions, asOfKey = toDateKey(new Date())) {
   const doneDates = new Set(completions.map((c) => c.date));
   const bridgedDates = new Set();
@@ -228,6 +237,11 @@ function computeStreakStats(completions, asOfKey = toDateKey(new Date())) {
   while (true) {
     if (doneDates.has(cursor)) {
       current += 1;
+    } else if (addDays(cursor, 1) > endKey) {
+      // Still within its own grace day (the day right after the miss hasn't
+      // fully elapsed yet as of endKey) -- undecided for now, not yet a
+      // broken streak or a spent freeze.
+      current = 0;
     } else if (freezeTokens > 0 && current > 0) {
       freezeTokens -= 1;
       bridgedDates.add(cursor);
@@ -270,19 +284,35 @@ function checkForNewBadges(progress, stats) {
   return newlyUnlocked;
 }
 
-// Past days that are neither completed nor freeze-bridged — i.e. genuinely
-// missed and still eligible to be saved from the calendar.
+// The single most recent missed day, if it's still within its one-day grace
+// window and hasn't been rescued yet -- the only day saveDay() will ever
+// accept. At most one entry: every older miss has already been resolved by
+// computeStreakStats, either bridged by a freeze or permanently lost.
 function getMissedDates(raw, stats) {
+  const todayKey = toDateKey(new Date());
+  const yesterdayKey = addDays(todayKey, -1);
+  const firstOpenKey = toDateKey(new Date(raw.firstOpenAt));
+  if (yesterdayKey < firstOpenKey) return [];
+  const doneDates = new Set(raw.completions.map((c) => c.date));
+  if (doneDates.has(yesterdayKey) || stats.bridgedDates.has(yesterdayKey)) return [];
+  return [yesterdayKey];
+}
+
+// Past days whose one-day grace window closed with no freeze available to
+// bridge them -- permanently missed, and (unlike getMissedDates) no longer
+// actionable from the calendar. Purely informational, for showing why the
+// streak broke where it did.
+function getLostDates(raw, stats) {
   const doneDates = new Set(raw.completions.map((c) => c.date));
   const firstOpenKey = toDateKey(new Date(raw.firstOpenAt));
-  const todayKey = toDateKey(new Date());
-  const missed = [];
+  const yesterdayKey = addDays(toDateKey(new Date()), -1);
+  const lost = [];
   let cursor = firstOpenKey;
-  while (cursor < todayKey) {
-    if (!doneDates.has(cursor) && !stats.bridgedDates.has(cursor)) missed.push(cursor);
+  while (cursor < yesterdayKey) {
+    if (!doneDates.has(cursor) && !stats.bridgedDates.has(cursor)) lost.push(cursor);
     cursor = addDays(cursor, 1);
   }
-  return missed;
+  return lost;
 }
 
 export function getProgress() {
@@ -295,6 +325,7 @@ export function getProgress() {
     freezeTokens: stats.freezeTokens,
     bridgedDates: stats.bridgedDates,
     missedDates: getMissedDates(raw, stats),
+    lostDates: getLostDates(raw, stats),
     totalCompleted: raw.completions.length,
   };
 }
@@ -385,13 +416,17 @@ export function completeChallenge(exercise) {
   return getProgress();
 }
 
-// Retroactively completes a past missed day with a harder makeup exercise,
-// so it counts toward the streak instead of leaving a gap. Returns null if
-// the day isn't eligible (already done, or not in the past).
+// Retroactively completes yesterday with a harder makeup exercise, so it
+// counts toward the streak instead of leaving a gap. A missed day only gets
+// this one grace day to be rescued -- once today is gone too, the miss is
+// either bridged by a freeze or the streak breaks there for good (see
+// computeStreakStats), so anything older than yesterday is no longer
+// eligible. Returns null if the day isn't eligible (already done, or not
+// yesterday).
 export function saveDay(dateKey, level) {
   const raw = loadRaw();
   const todayKey = toDateKey(new Date());
-  if (dateKey >= todayKey) return null;
+  if (dateKey !== addDays(todayKey, -1)) return null;
   if (raw.completions.some((c) => c.date === dateKey)) return null;
 
   const exercise = pickExerciseForDate(new Date(`${dateKey}T00:00:00`));

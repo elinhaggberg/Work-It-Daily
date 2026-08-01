@@ -1,4 +1,4 @@
-import { getProgress, toDateKey, getLevel } from "../storage.js";
+import { getProgress, toDateKey, getLevel, addDays } from "../storage.js";
 import { getExercise, pickExerciseForDate } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
@@ -95,6 +95,11 @@ export function renderCalendar(root, nav) {
       const isBridged = progress.bridgedDates.has(dateKey);
       const isBeforeAccount = dateKey < firstOpenKey;
       const isFuture = dateKey > todayKey;
+      // Only yesterday is still within its one-day grace window to be
+      // rescued -- anything older that's neither done nor frozen already
+      // had its chance and is permanently missed (see saveDay/getLostDates).
+      const isRescuable = dateKey === addDays(todayKey, -1);
+      const isLost = progress.lostDates.includes(dateKey);
 
       const cell = document.createElement("button");
       cell.type = "button";
@@ -123,9 +128,17 @@ export function renderCalendar(root, nav) {
         // Today hasn't concluded yet, so it isn't "missed" — today's
         // exercise is still doable from Home. Nothing to do here yet.
         cell.disabled = true;
-      } else {
+      } else if (isRescuable) {
         cell.classList.add("is-missed");
         cell.addEventListener("click", () => openSaveDaySheet(dateKey));
+      } else if (isLost) {
+        cell.classList.add("is-lost");
+        cell.addEventListener("click", () => openDayInfoSheet(dateKey, null, false, true));
+      } else {
+        // Still today's date's own yesterday-window hasn't closed for this
+        // date yet in the stats replay (e.g. right at the boundary) -- rare,
+        // but leave it inert rather than guessing at a status.
+        cell.disabled = true;
       }
 
       cells.push(cell);
@@ -134,7 +147,7 @@ export function renderCalendar(root, nav) {
     gridEl.replaceChildren(...cells);
   }
 
-  function openDayInfoSheet(dateKey, completion, isBridged) {
+  function openDayInfoSheet(dateKey, completion, isBridged, isLost) {
     const sheet = openSheet("tpl-day-info");
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
     sheet.el.querySelector(".day-info-date").textContent = formatLongDate(dateKey);
@@ -153,6 +166,8 @@ export function renderCalendar(root, nav) {
       });
     } else if (isBridged) {
       statusEl.textContent = "❄ Covered by a streak freeze";
+    } else if (isLost) {
+      statusEl.textContent = "✕ Missed — its one day to be rescued or frozen already passed";
     }
   }
 

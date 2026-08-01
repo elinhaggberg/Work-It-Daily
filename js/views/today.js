@@ -115,11 +115,12 @@ export function renderToday(root, nav) {
   root.querySelector("#settings-btn").addEventListener("click", openSettingsMenu);
   const calendarBtn = root.querySelector("#calendar-btn");
   calendarBtn.addEventListener("click", () => nav.toCalendar());
-  const missedCount = progress.missedDates.length;
-  if (missedCount > 0) {
+  // At most one day is ever rescuable at a time now -- a miss only stays
+  // open through the very next day (see getMissedDates in storage.js) --
+  // so this is a same-day deadline, not just a to-do list item.
+  if (progress.missedDates.length > 0) {
     calendarBtn.classList.add("has-missed");
-    calendarBtn.querySelector(".calendar-btn-label").textContent =
-      `⚠️ ${missedCount} day${missedCount === 1 ? "" : "s"} to rescue`;
+    calendarBtn.querySelector(".calendar-btn-label").textContent = "⚠️ Rescue yesterday before today ends";
   }
   renderBadgeShelf(root);
   root.querySelector("#badge-shelf").addEventListener("click", openBadgesSheet);
