@@ -362,6 +362,25 @@ export function getStreakBaseForToday() {
   return computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
 }
 
+// Same "streak as of the day before" pinning as getStreakBaseForToday(),
+// generalized to any date -- lets the calendar work out which challenge
+// exercise a past day would have offered, e.g. when rebuilding a rescued
+// day's missed weekly challenge.
+export function getStreakBaseForDate(dateKey) {
+  const raw = loadRaw();
+  return computeStreakStats(raw.completions, addDays(dateKey, -1)).currentStreak;
+}
+
+// Whether `dateKey` was (or would have been) an every-7th-day weekly
+// challenge day, based on the streak as it stood the day before -- regardless
+// of whether dateKey itself has since been completed, rescued, or missed.
+// Used by the calendar to flag a missed challenge day and to let a rescued
+// day's challenge be claimed after the fact.
+export function isChallengeDateKey(dateKey) {
+  const streakBase = getStreakBaseForDate(dateKey);
+  return pickChallengeForDate(new Date(`${dateKey}T00:00:00`), streakBase).isChallengeDay;
+}
+
 // Categories completed on any of the last `days` calendar days (not
 // counting today) -- used to steer today's pick away from immediately
 // repeating a category that's just been done.
@@ -412,6 +431,28 @@ export function completeChallenge(exercise) {
   if (!isChallengeDay) return null;
 
   raw.challengeCompletions.push({ date: todayKey, exerciseId: exercise.id, category: exercise.category });
+  saveRaw(raw);
+  return getProgress();
+}
+
+// Retroactively completes a past day's weekly challenge -- for a day whose
+// regular exercise was itself saved via saveDay(). The rescue flow only ever
+// backfills the regular exercise, so a milestone landing on a rescued day
+// would otherwise never get its bonus offered at all; this is what lets the
+// calendar hand it back. Unlike saveDay(), not restricted to yesterday: once
+// a day's regular exercise is rescued it's a fixed historical record, and its
+// still-unclaimed challenge (if any) stays claimable from the calendar any
+// time after, not just the next day. Returns null if the day isn't eligible
+// (not actually rescued, wasn't a challenge day, or already claimed).
+export function completeChallengeForDate(dateKey, exercise) {
+  const raw = loadRaw();
+  if (raw.challengeCompletions.some((c) => c.date === dateKey)) return null;
+
+  const dayCompletion = raw.completions.find((c) => c.date === dateKey);
+  if (!dayCompletion || !dayCompletion.rescued) return null;
+  if (!isChallengeDateKey(dateKey)) return null;
+
+  raw.challengeCompletions.push({ date: dateKey, exerciseId: exercise.id, category: exercise.category });
   saveRaw(raw);
   return getProgress();
 }

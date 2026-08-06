@@ -17,8 +17,8 @@ const nav = {
   toPlayer: (rescueDateKey) => {
     location.hash = rescueDateKey ? `#/play/rescue/${rescueDateKey}` : "#/play";
   },
-  toChallengePlayer: () => {
-    location.hash = "#/play/challenge";
+  toChallengePlayer: (rescueDateKey) => {
+    location.hash = rescueDateKey ? `#/play/challenge/rescue/${rescueDateKey}` : "#/play/challenge";
   },
   toFinish: (result) => {
     pendingFinishResult = result;
@@ -38,9 +38,13 @@ function route() {
 
   switch (view) {
     case "play": {
+      // Supports all four combos: /play, /play/rescue/<date>,
+      // /play/challenge, and /play/challenge/rescue/<date> (rescuing a past
+      // day's weekly challenge alongside its regular exercise).
       const parts = hash.replace(/^#\//, "").split("/");
-      const rescueDateKey = parts[1] === "rescue" ? parts[2] : null;
       const isChallenge = parts[1] === "challenge";
+      const rescueParts = isChallenge ? parts.slice(2) : parts.slice(1);
+      const rescueDateKey = rescueParts[0] === "rescue" ? rescueParts[1] : null;
       renderPlayer(root, nav, rescueDateKey, isChallenge);
       break;
     }

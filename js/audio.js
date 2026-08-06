@@ -101,19 +101,36 @@ function tone(key, freq, duration, options) {
   play(key, () => renderToneWav(freq, duration, options));
 }
 
+// Priming only ever needs to happen once per tone for the life of the page —
+// see unlockAudio() below. Guarding on that here (rather than relying on
+// every caller to know it's a one-time thing) matters because unlockAudio()
+// is invoked from more than one user gesture in a row (tapping "Start today's
+// exercise", then the player's own play button, then its sound toggle...):
+// without this guard, a second primeTone() on the same key while the first
+// play() is still in-flight steals that play request, so the first call's
+// own .then()/.catch() fires anyway and unmutes the shared element while the
+// second call's play() is the one actually still sounding at that point.
+const primedKeys = new Set();
+
+// Muting (rather than zeroing .volume) is what actually keeps this silent:
+// iOS Safari treats HTMLMediaElement.volume as read-only (assignments to it
+// are silently ignored -- only the hardware buttons control loudness there),
+// so a volume-based mute leaks the real tone at full volume on iOS every
+// time. .muted is a real playback switch honored on every platform.
 function primeTone(key, freq, duration, options) {
+  if (primedKeys.has(key)) return;
+  primedKeys.add(key);
   const el = getAudioElement(key, () => renderToneWav(freq, duration, options));
-  const restoreVolume = el.volume;
-  el.volume = 0;
+  el.muted = true;
   el.currentTime = 0;
   el.play()
     .then(() => {
       el.pause();
       el.currentTime = 0;
-      el.volume = restoreVolume;
+      el.muted = false;
     })
     .catch(() => {
-      el.volume = restoreVolume;
+      el.muted = false;
     });
 }
 
