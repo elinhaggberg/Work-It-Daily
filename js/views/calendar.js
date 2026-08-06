@@ -3,7 +3,7 @@ import { getExercise, pickExerciseForDate, pickChallengeForDate } from "../exerc
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 import { unlockAudio } from "../audio.js";
-import { openDaySummarySheet } from "../daySummary.js";
+import { openDaySummarySheet, openChallengeSummarySheet } from "../daySummary.js";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -139,7 +139,7 @@ export function renderCalendar(root, nav) {
       if (completion) {
         cell.classList.add(completion.rescued ? "is-rescued" : "is-done");
         cell.addEventListener("click", () =>
-          openDayInfoSheet(dateKey, completion, false, false, challengeCompletionsByDate.has(dateKey))
+          openDayInfoSheet(dateKey, completion, false, false, challengeCompletionsByDate.get(dateKey))
         );
       } else if (isBridged) {
         cell.classList.add("is-frozen");
@@ -170,7 +170,7 @@ export function renderCalendar(root, nav) {
     gridEl.replaceChildren(...cells);
   }
 
-  function openDayInfoSheet(dateKey, completion, isBridged, isLost, challengeDone) {
+  function openDayInfoSheet(dateKey, completion, isBridged, isLost, challengeCompletion) {
     const sheet = openSheet("tpl-day-info");
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
     sheet.el.querySelector(".day-info-date").textContent = formatLongDate(dateKey);
@@ -181,20 +181,33 @@ export function renderCalendar(root, nav) {
       const label = exercise ? exercise.name : "an exercise";
       statusEl.textContent = completion.rescued ? `✅ Saved retroactively — ${label}` : `✅ Done — ${label}`;
 
-      const actions = sheet.el.querySelector(".day-info-actions");
-      actions.classList.remove("hidden");
-      actions.querySelector(".day-info-summary-btn").addEventListener("click", () => {
+      const summaryBtn = sheet.el.querySelector(".day-info-summary-btn");
+      summaryBtn.classList.remove("hidden");
+      summaryBtn.addEventListener("click", () => {
         sheet.close();
         openDaySummarySheet(dateKey);
       });
 
-      // Only a rescued day can be missing its weekly challenge this way -- a
-      // live-completed day's challenge (if any) was already offered on Home
-      // that same day, so there's nothing left to hand back here.
-      if (completion.rescued && !challengeDone && isChallengeDateKey(dateKey)) {
-        const challengeActions = sheet.el.querySelector(".day-info-challenge-actions");
-        challengeActions.classList.remove("hidden");
-        challengeActions.querySelector(".day-info-challenge-btn").addEventListener("click", () => {
+      if (challengeCompletion) {
+        const challengeExercise = getExercise(challengeCompletion.exerciseId);
+        const challengeLabel = challengeExercise ? challengeExercise.name : "an exercise";
+        const challengeRow = sheet.el.querySelector(".day-info-challenge-row");
+        challengeRow.classList.remove("hidden");
+        sheet.el.querySelector(".day-info-challenge-status").textContent = `⭐ Weekly challenge — ${challengeLabel}`;
+
+        const challengeSummaryBtn = sheet.el.querySelector(".day-info-challenge-summary-btn");
+        challengeSummaryBtn.classList.remove("hidden");
+        challengeSummaryBtn.addEventListener("click", () => {
+          sheet.close();
+          openChallengeSummarySheet(dateKey);
+        });
+      } else if (completion.rescued && isChallengeDateKey(dateKey)) {
+        // Only a rescued day can be missing its weekly challenge this way --
+        // a live-completed day's challenge (if any) was already offered on
+        // Home that same day, so there's nothing left to hand back here.
+        const rescueActions = sheet.el.querySelector(".day-info-rescue-challenge-actions");
+        rescueActions.classList.remove("hidden");
+        rescueActions.querySelector(".day-info-challenge-btn").addEventListener("click", () => {
           sheet.close();
           openSaveChallengeSheet(dateKey);
         });
