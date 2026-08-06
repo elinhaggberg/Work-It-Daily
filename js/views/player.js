@@ -2,10 +2,12 @@ import {
   completeToday,
   saveDay,
   completeChallenge,
+  completeChallengeForDate,
   getSoundEnabled,
   setSoundEnabled,
   getLevel,
   getStreakBaseForToday,
+  getStreakBaseForDate,
   getRecentCategories,
 } from "../storage.js";
 import { pickExerciseForDate, pickChallengeForDate, RECENT_LOOKBACK_DAYS } from "../exercises.js";
@@ -23,7 +25,19 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   const levelValue = getLevel() ?? DEFAULT_LEVEL;
 
   let baseExercise;
-  if (rescueDateKey) {
+  if (rescueDateKey && isChallenge) {
+    const { exercise, isChallengeDay } = pickChallengeForDate(
+      new Date(`${rescueDateKey}T00:00:00`),
+      getStreakBaseForDate(rescueDateKey)
+    );
+    if (!isChallengeDay || !exercise) {
+      // No longer eligible (already claimed, or this got opened stale) --
+      // nothing to play, just head back rather than show a broken screen.
+      nav.toCalendar();
+      return;
+    }
+    baseExercise = exercise;
+  } else if (rescueDateKey) {
     baseExercise = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`));
   } else if (isChallenge) {
     const { exercise, isChallengeDay } = pickChallengeForDate(new Date(), getStreakBaseForToday());
@@ -43,13 +57,16 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   root.replaceChildren(tpl.content.cloneNode(true));
 
   const rescueBannerEl = root.querySelector("#rescue-banner");
-  if (rescueDateKey) {
+  if (rescueDateKey && !isChallenge) {
     rescueBannerEl.textContent = `⚠️ Saving ${formatDate(`${rescueDateKey}T00:00:00`)} — ${RESCUE_PENALTY_MULTIPLIER}× penalty`;
     rescueBannerEl.classList.remove("hidden");
   }
 
   const challengeBannerEl = root.querySelector("#challenge-player-banner");
   if (isChallenge) {
+    challengeBannerEl.textContent = rescueDateKey
+      ? `⭐ Weekly challenge — rescuing ${formatDate(`${rescueDateKey}T00:00:00`)}'s bonus, ${RESCUE_PENALTY_MULTIPLIER}× penalty`
+      : "⭐ Weekly challenge — bonus, on top of today's exercise";
     challengeBannerEl.classList.remove("hidden");
   }
 
@@ -155,6 +172,16 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     stopTicking();
     setWakeLockWanted(false);
     audio.workoutComplete();
+
+    if (rescueDateKey && isChallenge) {
+      // Same "bonus extra" treatment as the live weekly challenge below --
+      // it never touched the streak/badges even on the day it was meant for,
+      // so rescuing it later doesn't either. Back to the calendar (where
+      // this was launched from), not the daily finish screen.
+      completeChallengeForDate(rescueDateKey, exercise);
+      nav.toCalendar();
+      return;
+    }
 
     if (rescueDateKey) {
       const result = saveDay(rescueDateKey, levelValue);

@@ -1,5 +1,5 @@
-import { getProgress, toDateKey, getLevel, addDays } from "../storage.js";
-import { getExercise, pickExerciseForDate } from "../exercises.js";
+import { getProgress, toDateKey, getLevel, addDays, getStreakBaseForDate, isChallengeDateKey } from "../storage.js";
+import { getExercise, pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 import { unlockAudio } from "../audio.js";
@@ -70,6 +70,7 @@ export function renderCalendar(root, nav) {
   function draw() {
     const progress = getProgress();
     const completionsByDate = new Map(progress.completions.map((c) => [c.date, c]));
+    const challengeCompletionsByDate = new Map(progress.challengeCompletions.map((c) => [c.date, c]));
     const firstOpenKey = toDateKey(new Date(progress.firstOpenAt));
     const todayKey = toDateKey(today);
 
@@ -111,13 +112,35 @@ export function renderCalendar(root, nav) {
       dayNum.textContent = String(day);
       cell.appendChild(dayNum);
 
+      const dotsRow = document.createElement("span");
+      dotsRow.className = "calendar-day-dots";
+      cell.appendChild(dotsRow);
+
       const dot = document.createElement("span");
       dot.className = "calendar-day-dot";
-      cell.appendChild(dot);
+      dotsRow.appendChild(dot);
+
+      // A finished weekly challenge gets its own dot (any date, live or
+      // rescued) so it's visible alongside the day's regular-exercise dot
+      // rather than overwriting it. The grayed "pending" marker is scoped to
+      // exactly the cases the day-info/save-day sheets below can actually act
+      // on -- still missed, or already rescued but not yet claimed -- so a
+      // live-completed day whose live challenge was simply skipped doesn't
+      // show a dot promising an action that isn't there.
+      const challengeDot = document.createElement("span");
+      challengeDot.className = "calendar-day-challenge-dot";
+      if (challengeCompletionsByDate.has(dateKey)) {
+        challengeDot.classList.add("is-challenge-done");
+      } else if (isRescuable && (!completion || completion.rescued) && isChallengeDateKey(dateKey)) {
+        challengeDot.classList.add("is-challenge-pending");
+      }
+      dotsRow.appendChild(challengeDot);
 
       if (completion) {
         cell.classList.add(completion.rescued ? "is-rescued" : "is-done");
-        cell.addEventListener("click", () => openDayInfoSheet(dateKey, completion, false));
+        cell.addEventListener("click", () =>
+          openDayInfoSheet(dateKey, completion, false, false, challengeCompletionsByDate.has(dateKey))
+        );
       } else if (isBridged) {
         cell.classList.add("is-frozen");
         cell.addEventListener("click", () => openDayInfoSheet(dateKey, null, true));
@@ -147,7 +170,7 @@ export function renderCalendar(root, nav) {
     gridEl.replaceChildren(...cells);
   }
 
-  function openDayInfoSheet(dateKey, completion, isBridged, isLost) {
+  function openDayInfoSheet(dateKey, completion, isBridged, isLost, challengeDone) {
     const sheet = openSheet("tpl-day-info");
     sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
     sheet.el.querySelector(".day-info-date").textContent = formatLongDate(dateKey);
@@ -164,6 +187,18 @@ export function renderCalendar(root, nav) {
         sheet.close();
         openDaySummarySheet(dateKey);
       });
+
+      // Only a rescued day can be missing its weekly challenge this way -- a
+      // live-completed day's challenge (if any) was already offered on Home
+      // that same day, so there's nothing left to hand back here.
+      if (completion.rescued && !challengeDone && isChallengeDateKey(dateKey)) {
+        const challengeActions = sheet.el.querySelector(".day-info-challenge-actions");
+        challengeActions.classList.remove("hidden");
+        challengeActions.querySelector(".day-info-challenge-btn").addEventListener("click", () => {
+          sheet.close();
+          openSaveChallengeSheet(dateKey);
+        });
+      }
     } else if (isBridged) {
       statusEl.textContent = "❄ Covered by a streak freeze";
     } else if (isLost) {
@@ -193,6 +228,29 @@ export function renderCalendar(root, nav) {
       unlockAudio();
       sheet.close();
       nav.toPlayer(dateKey);
+    });
+  }
+
+  function openSaveChallengeSheet(dateKey) {
+    const sheet = openSheet("tpl-save-day-challenge");
+    sheet.el.querySelector(".close-btn").addEventListener("click", () => sheet.close());
+    sheet.el.querySelector(".save-day-cancel-btn").addEventListener("click", () => sheet.close());
+
+    const level = getLevel() ?? DEFAULT_LEVEL;
+    const streakBase = getStreakBaseForDate(dateKey);
+    const { exercise } = pickChallengeForDate(new Date(`${dateKey}T00:00:00`), streakBase);
+    const amount = scaleAmount(exercise, level, RESCUE_PENALTY_MULTIPLIER);
+    const amountText = exercise.type === "timer" ? `${amount}s hold` : `${amount} reps`;
+
+    sheet.el.querySelector(".save-challenge-date").textContent = formatLongDate(dateKey);
+    sheet.el.querySelector(".save-challenge-exercise").textContent = `${exercise.name} — ${amountText}`;
+    sheet.el.querySelector(".save-day-penalty").textContent =
+      `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${getLevelLabel(level)} amount.`;
+
+    sheet.el.querySelector(".save-day-start-btn").addEventListener("click", () => {
+      unlockAudio();
+      sheet.close();
+      nav.toChallengePlayer(dateKey);
     });
   }
 }
