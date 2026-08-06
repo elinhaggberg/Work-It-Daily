@@ -1,5 +1,5 @@
-import { getProgress, toDateKey, getLevel, addDays, getStreakBaseForDate, isChallengeDateKey } from "../storage.js";
-import { getExercise, pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
+import { getProgress, toDateKey, getLevel, addDays, getStreakBaseForDate, isChallengeDateKey, getYoutubeLinksEnabled } from "../storage.js";
+import { getExercise, pickExerciseForDate, pickChallengeForDate, youtubeHowToUrl } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 import { unlockAudio } from "../audio.js";
@@ -231,6 +231,9 @@ export function renderCalendar(root, nav) {
 
     sheet.el.querySelector(".save-day-date").textContent = formatLongDate(dateKey);
     sheet.el.querySelector(".save-day-exercise").textContent = `${exercise.name} — ${amountText}`;
+    const youtubeLink = sheet.el.querySelector(".save-day-youtube-link");
+    youtubeLink.href = youtubeHowToUrl(exercise.name);
+    youtubeLink.classList.toggle("hidden", !getYoutubeLinksEnabled());
     sheet.el.querySelector(".save-day-penalty").textContent =
       `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${getLevelLabel(level)} amount.`;
 
@@ -257,6 +260,9 @@ export function renderCalendar(root, nav) {
 
     sheet.el.querySelector(".save-challenge-date").textContent = formatLongDate(dateKey);
     sheet.el.querySelector(".save-challenge-exercise").textContent = `${exercise.name} — ${amountText}`;
+    const youtubeLink = sheet.el.querySelector(".save-day-youtube-link");
+    youtubeLink.href = youtubeHowToUrl(exercise.name);
+    youtubeLink.classList.toggle("hidden", !getYoutubeLinksEnabled());
     sheet.el.querySelector(".save-day-penalty").textContent =
       `${RESCUE_PENALTY_MULTIPLIER}× penalty on top of your normal ${getLevelLabel(level)} amount.`;
 
