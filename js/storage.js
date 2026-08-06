@@ -6,6 +6,7 @@ const THEME_KEY = "wid_theme_v1";
 const SOUND_KEY = "wid_sound_enabled_v1";
 const LEVEL_KEY = "wid_level_v1";
 const LAST_SEEN_VERSION_KEY = "wid_last_seen_version_v1";
+const YOUTUBE_LINKS_KEY = "wid_youtube_links_v1";
 
 function readJSON(key, fallback) {
   try {
@@ -518,6 +519,7 @@ export function exportBackupData() {
     level: getLevel(),
     theme: getThemePref(),
     soundEnabled: getSoundEnabled(),
+    youtubeLinksEnabled: getYoutubeLinksEnabled(),
   };
 }
 
@@ -585,6 +587,7 @@ export function importBackupData(data) {
   // preferences.
   if (data.theme) setThemePref(data.theme);
   if (typeof data.soundEnabled === "boolean") setSoundEnabled(data.soundEnabled);
+  if (typeof data.youtubeLinksEnabled === "boolean") setYoutubeLinksEnabled(data.youtubeLinksEnabled);
   return true;
 }
 
@@ -604,6 +607,17 @@ export function getThemePref() {
 
 export function setThemePref(pref) {
   writeJSON(THEME_KEY, pref);
+}
+
+// On (undefined, the pre-feature default) unless explicitly turned off --
+// after a few years with the app most exercises need no reminder, but new
+// installs should see the "how to" links out of the box.
+export function getYoutubeLinksEnabled() {
+  return localStorage.getItem(YOUTUBE_LINKS_KEY) !== "false";
+}
+
+export function setYoutubeLinksEnabled(value) {
+  localStorage.setItem(YOUTUBE_LINKS_KEY, value ? "true" : "false");
 }
 
 // Returns a slider position (0-3), or null if never set. Older installs
@@ -650,4 +664,5 @@ export function resetAllData() {
   localStorage.removeItem(SOUND_KEY);
   localStorage.removeItem(LEVEL_KEY);
   localStorage.removeItem(LAST_SEEN_VERSION_KEY);
+  localStorage.removeItem(YOUTUBE_LINKS_KEY);
 }

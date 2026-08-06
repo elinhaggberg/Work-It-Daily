@@ -99,6 +99,13 @@ export function getExercise(id) {
   return EXERCISES.find((e) => e.id === id) || null;
 }
 
+// A YouTube search for how to perform a given exercise -- not a specific
+// curated video, since form/equipment preferences vary, but "how to X"
+// reliably surfaces demonstrations for every move in the library.
+export function youtubeHowToUrl(exerciseName) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`how to ${exerciseName}`)}`;
+}
+
 export function exercisesByCategory(categoryId) {
   return EXERCISES.filter((e) => e.category === categoryId);
 }

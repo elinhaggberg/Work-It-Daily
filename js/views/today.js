@@ -16,10 +16,12 @@ import {
   getLastSeenVersion,
   setLastSeenVersion,
   toDateKey,
+  getYoutubeLinksEnabled,
+  setYoutubeLinksEnabled,
 } from "../storage.js";
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
-import { pickExerciseForDate, pickChallengeForDate, RECENT_LOOKBACK_DAYS, CATEGORIES } from "../exercises.js";
+import { pickExerciseForDate, pickChallengeForDate, RECENT_LOOKBACK_DAYS, CATEGORIES, youtubeHowToUrl } from "../exercises.js";
 import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
@@ -57,6 +59,9 @@ export function renderToday(root, nav) {
     card.querySelector(".exercise-amount").textContent =
       exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
     card.querySelector(".exercise-description").textContent = exercise.description;
+    const youtubeLink = card.querySelector(".exercise-youtube-link");
+    youtubeLink.href = youtubeHowToUrl(exercise.name);
+    youtubeLink.classList.toggle("hidden", !getYoutubeLinksEnabled());
   }
   renderExerciseCard(getLevel() ?? DEFAULT_LEVEL);
 
@@ -93,6 +98,9 @@ export function renderToday(root, nav) {
     challengeCard.querySelector(".exercise-amount").textContent =
       exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
     challengeCard.querySelector(".exercise-description").textContent = exercise.description;
+    const youtubeLink = challengeCard.querySelector(".exercise-youtube-link");
+    youtubeLink.href = youtubeHowToUrl(exercise.name);
+    youtubeLink.classList.toggle("hidden", !getYoutubeLinksEnabled());
   }
   renderChallengeCard(getLevel() ?? DEFAULT_LEVEL);
 
@@ -313,6 +321,15 @@ export function renderToday(root, nav) {
     });
 
     renderActiveState();
+
+    const youtubeToggle = sheet.el.querySelector("#youtube-links-toggle");
+    youtubeToggle.checked = getYoutubeLinksEnabled();
+    youtubeToggle.addEventListener("change", () => {
+      setYoutubeLinksEnabled(youtubeToggle.checked);
+      const levelValue = getLevel() ?? DEFAULT_LEVEL;
+      renderExerciseCard(levelValue);
+      renderChallengeCard(levelValue);
+    });
   }
 
   function openImport() {
