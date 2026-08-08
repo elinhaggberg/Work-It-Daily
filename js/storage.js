@@ -238,10 +238,14 @@ function computeStreakStats(completions, asOfKey = toDateKey(new Date())) {
   while (true) {
     if (doneDates.has(cursor)) {
       current += 1;
-    } else if (addDays(cursor, 1) > endKey) {
+    } else if (addDays(cursor, 1) >= asOfKey) {
       // Still within its own grace day (the day right after the miss hasn't
-      // fully elapsed yet as of endKey) -- undecided for now, not yet a
-      // broken streak or a spent freeze.
+      // fully elapsed yet, by the real calendar date) -- undecided for now,
+      // not yet a broken streak or a spent freeze. Deliberately checked
+      // against asOfKey rather than endKey: endKey snaps forward the moment
+      // *today's* exercise is completed, which would otherwise make a still-
+      // rescuable miss from yesterday look like its grace day had already
+      // elapsed just because today's regular exercise got done first.
       current = 0;
     } else if (freezeTokens > 0 && current > 0) {
       freezeTokens -= 1;
