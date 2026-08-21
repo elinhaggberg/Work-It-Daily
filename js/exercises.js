@@ -145,10 +145,6 @@ const DAILY_POOL = interleaveByCategory(LEGACY_DAILY_POOL);
 // history) can't change retroactively out from under anyone.
 const ROTATION_V2_START = "2026-07-28";
 
-// How many days back "today"'s pick avoids repeating -- see recentExerciseIds
-// below.
-export const RECENT_LOOKBACK_DAYS = 3;
-
 function localDateKey(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -165,13 +161,11 @@ function dayIndex(date) {
   return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 }
 
-// Deterministic "today's exercise": a stable rotation seeded by the date, so
-// it's the same all day regardless of reloads and doesn't need a server.
-// `recentCategories` (optional -- only the live "today" pick bothers with
-// it) steers away from any category done in roughly the last few days, so
-// the mixed rotation below doesn't kick off by immediately repeating
-// whatever category the old grouped one had just been running for days.
-export function pickExerciseForDate(date, recentCategories = []) {
+// Deterministic "today's exercise": a stable rotation seeded purely by the
+// date, so it's the same all day regardless of reloads, doesn't need a
+// server, and -- since it never looks at anyone's personal history -- lands
+// on the same exercise for every person on the same calendar date.
+export function pickExerciseForDate(date) {
   if (localDateKey(date) < ROTATION_V2_START) {
     const idx = dayIndex(date);
     return LEGACY_DAILY_POOL[idx % LEGACY_DAILY_POOL.length];
@@ -179,11 +173,7 @@ export function pickExerciseForDate(date, recentCategories = []) {
 
   const cutoverIdx = dayIndex(new Date(`${ROTATION_V2_START}T00:00:00`));
   const offset = dayIndex(date) - cutoverIdx;
-  let idx = ((offset % DAILY_POOL.length) + DAILY_POOL.length) % DAILY_POOL.length;
-
-  for (let tries = 0; tries < DAILY_POOL.length && recentCategories.includes(DAILY_POOL[idx].category); tries++) {
-    idx = (idx + 1) % DAILY_POOL.length;
-  }
+  const idx = ((offset % DAILY_POOL.length) + DAILY_POOL.length) % DAILY_POOL.length;
   return DAILY_POOL[idx];
 }
 
