@@ -2,9 +2,16 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.6.0";
+export const APP_VERSION = "1.6.1";
 
 export const CHANGELOG = [
+  {
+    version: "1.6.1",
+    notes: [
+      "Today's exercise is now picked purely by date, so two people using the app independently always see the same exercise on the same day — it no longer drifts apart based on your own streak-freeze or rescue history",
+      "Fixed the weekly challenge sometimes disappearing from both Home and the Calendar when it was completed before rescuing a missed day that turned out to be the real 7-day milestone — it's now correctly credited to that day instead of getting lost",
+    ],
+  },
   {
     version: "1.6.0",
     notes: [

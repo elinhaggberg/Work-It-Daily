@@ -377,13 +377,21 @@ export function getStreakBaseForDate(dateKey) {
 }
 
 // Whether `dateKey` was (or would have been) an every-7th-day weekly
-// challenge day, based on the streak as it stood the day before -- regardless
-// of whether dateKey itself has since been completed, rescued, or missed.
+// challenge day, based on the streak as it stood the day before within the
+// given completions -- regardless of whether dateKey itself has since been
+// completed, rescued, or missed. Takes a completions array directly (rather
+// than reading storage) so callers that are mid-mutation, like saveDay(),
+// can evaluate it against not-yet-saved state.
+function challengeDayFor(completions, dateKey) {
+  const streakBase = computeStreakStats(completions, addDays(dateKey, -1)).currentStreak;
+  return pickChallengeForDate(new Date(`${dateKey}T00:00:00`), streakBase).isChallengeDay;
+}
+
 // Used by the calendar to flag a missed challenge day and to let a rescued
 // day's challenge be claimed after the fact.
 export function isChallengeDateKey(dateKey) {
-  const streakBase = getStreakBaseForDate(dateKey);
-  return pickChallengeForDate(new Date(`${dateKey}T00:00:00`), streakBase).isChallengeDay;
+  const raw = loadRaw();
+  return challengeDayFor(raw.completions, dateKey);
 }
 
 // Records today's completion, updating the streak, freeze tokens, totals,
@@ -472,6 +480,27 @@ export function saveDay(dateKey, level) {
 
   const stats = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, stats);
+
+  // Completing today's live challenge and rescuing yesterday can happen in
+  // either order. If the challenge was completed under today's date while
+  // yesterday was still an open miss, and yesterday turns out to be the
+  // *real* 7-day milestone once it's rescued here, today's own eligibility
+  // flips to false -- stranding that already-done challenge under a date
+  // that, in hindsight, was never actually a challenge day (not shown as
+  // today's anymore, not recorded as yesterday's either). Re-file it under
+  // the day it was actually earned for instead of leaving it orphaned and
+  // asking the makeup flow to redo work that's already done.
+  const todayChallenge = raw.challengeCompletions.find((c) => c.date === todayKey);
+  const rescuedDayHasChallenge = raw.challengeCompletions.some((c) => c.date === dateKey);
+  if (
+    todayChallenge &&
+    !rescuedDayHasChallenge &&
+    challengeDayFor(raw.completions, dateKey) &&
+    !challengeDayFor(raw.completions, todayKey)
+  ) {
+    todayChallenge.date = dateKey;
+  }
+
   saveRaw(raw);
 
   return { progress: getProgress(), newlyUnlocked, exercise, amount };
