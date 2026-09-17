@@ -72,3 +72,24 @@ export function scaleAmount(exercise, levelValue, extraMultiplier = 1) {
 export function scaledExercise(exercise, levelValue, extraMultiplier = 1) {
   return { ...exercise, amount: scaleAmount(exercise, levelValue, extraMultiplier) };
 }
+
+// Once a rep count runs meaningfully past a "good number in a row," form
+// tends to slip just from sheer volume -- so past that point, suggest
+// breaking it into a few shorter sets instead. Medium's hand-tuned amount
+// for each exercise already *is* that "good number in a row" (the level
+// system's own baseline for correct-form reps), so it doubles as the
+// per-set target with no new per-exercise data needed.
+const SET_SPLIT_THRESHOLD = 1.5; // only suggest once reps clearly exceed Medium's amount
+export const SET_SPLIT_REST_SECONDS = 20;
+
+// Returns null when a split isn't worth suggesting (a timer hold, or reps
+// still close to the Medium baseline) -- otherwise a set count and a
+// roughly-even per-set size that sums back to (approximately) scaledAmount.
+export function suggestSetSplit(exercise, scaledAmount) {
+  if (exercise.type !== "reps") return null;
+  const mediumAmount = scaleAmount(exercise, DEFAULT_LEVEL);
+  if (scaledAmount <= mediumAmount * SET_SPLIT_THRESHOLD) return null;
+  const sets = Math.ceil(scaledAmount / mediumAmount);
+  const perSet = Math.round(scaledAmount / sets);
+  return { sets, perSet };
+}

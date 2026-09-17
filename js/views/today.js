@@ -21,7 +21,16 @@ import {
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
 import { pickExerciseForDate, pickChallengeForDate, CATEGORIES, youtubeHowToUrl } from "../exercises.js";
-import { DEFAULT_LEVEL, LEVEL_MIN, LEVEL_MAX, LEVEL_STEP, scaledExercise, getLevelLabel } from "../levels.js";
+import {
+  DEFAULT_LEVEL,
+  LEVEL_MIN,
+  LEVEL_MAX,
+  LEVEL_STEP,
+  scaledExercise,
+  getLevelLabel,
+  suggestSetSplit,
+  SET_SPLIT_REST_SECONDS,
+} from "../levels.js";
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { renderMascot } from "../mascot.js";
 import { openSheet } from "../sheet.js";
@@ -47,6 +56,7 @@ export function renderToday(root, nav) {
   freezeEl.title = `${progress.freezeTokens} streak freeze${progress.freezeTokens === 1 ? "" : "s"} saved — bridges one missed day`;
 
   const card = root.querySelector("#exercise-card");
+  const setTipEl = root.querySelector("#exercise-set-tip");
   // Reused by the level slider so the card updates live as it's dragged,
   // not just on the next full render.
   function renderExerciseCard(levelValue) {
@@ -61,6 +71,13 @@ export function renderToday(root, nav) {
     const youtubeLink = card.querySelector(".exercise-youtube-link");
     youtubeLink.href = youtubeHowToUrl(exercise.name);
     youtubeLink.classList.toggle("hidden", !getYoutubeLinksEnabled());
+
+    const split = suggestSetSplit(baseExercise, exercise.amount);
+    setTipEl.classList.toggle("hidden", !split);
+    if (split) {
+      setTipEl.textContent =
+        `💡 Recommendation: ${split.sets} sets of ~${split.perSet}, resting ~${SET_SPLIT_REST_SECONDS}s between`;
+    }
   }
   renderExerciseCard(getLevel() ?? DEFAULT_LEVEL);
 
