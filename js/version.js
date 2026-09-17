@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.6.1";
+export const APP_VERSION = "1.7.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.7.0",
+    notes: [
+      "When a level's rep count runs well past a comfortable amount to do back-to-back, the exercise card now suggests breaking it into a few shorter sets with a short rest between, instead of one long unbroken grind",
+    ],
+  },
   {
     version: "1.6.1",
     notes: [
