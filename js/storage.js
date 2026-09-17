@@ -361,7 +361,7 @@ export function getTodayStatus() {
 // completing today's regular exercise first would bump the streak to
 // already include today and silently take the bonus off the table before
 // it had even been attempted.
-export function getStreakBaseForToday() {
+function getStreakBaseForToday() {
   const raw = loadRaw();
   const todayKey = toDateKey(new Date());
   return computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
@@ -392,6 +392,25 @@ function challengeDayFor(completions, dateKey) {
 export function isChallengeDateKey(dateKey) {
   const raw = loadRaw();
   return challengeDayFor(raw.completions, dateKey);
+}
+
+// Whether today should offer the live weekly challenge, and which exercise.
+// Deliberately suppressed while yesterday is still an open, unresolved miss
+// (see getMissedDates): until that miss is decided -- rescued, bridged by a
+// freeze, or lost for good -- getStreakBaseForToday()'s "pinned to the day
+// before yesterday" fallback can read today as a second copy of a milestone
+// that actually belonged to yesterday, offering an unrelated exercise
+// alongside whatever's still sitting open for yesterday itself. Once
+// yesterday resolves (by being rescued), the calendar's own rescue flow
+// (completeChallengeForDate) is the one path back to a missed milestone's
+// bonus -- not a fresh "today" offer.
+function computeTodayChallenge() {
+  if (getProgress().missedDates.length > 0) return { exercise: null, isChallengeDay: false };
+  return pickChallengeForDate(new Date(), getStreakBaseForToday());
+}
+
+export function getTodayChallenge() {
+  return computeTodayChallenge();
 }
 
 // Records today's completion, updating the streak, freeze tokens, totals,
@@ -429,8 +448,7 @@ export function completeChallenge(exercise) {
   const todayKey = toDateKey(new Date());
   if (raw.challengeCompletions.some((c) => c.date === todayKey)) return null;
 
-  const streakBase = computeStreakStats(raw.completions, addDays(todayKey, -1)).currentStreak;
-  const { isChallengeDay } = pickChallengeForDate(new Date(), streakBase);
+  const { isChallengeDay } = computeTodayChallenge();
   if (!isChallengeDay) return null;
 
   raw.challengeCompletions.push({ date: todayKey, exerciseId: exercise.id, category: exercise.category });

@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.7.0";
+export const APP_VERSION = "1.7.1";
 
 export const CHANGELOG = [
+  {
+    version: "1.7.1",
+    notes: [
+      "Fixed the weekly challenge sometimes offering a second, unrelated exercise on the day after a missed milestone — while yesterday is still open to be rescued, today no longer offers its own challenge. Once you rescue it, the Calendar is the one place to claim that day's challenge bonus",
+    ],
+  },
   {
     version: "1.7.0",
     notes: [
