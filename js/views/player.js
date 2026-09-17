@@ -6,7 +6,7 @@ import {
   getSoundEnabled,
   setSoundEnabled,
   getLevel,
-  getStreakBaseForToday,
+  getTodayChallenge,
   getStreakBaseForDate,
 } from "../storage.js";
 import { pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
@@ -39,7 +39,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   } else if (rescueDateKey) {
     baseExercise = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`));
   } else if (isChallenge) {
-    const { exercise, isChallengeDay } = pickChallengeForDate(new Date(), getStreakBaseForToday());
+    const { exercise, isChallengeDay } = getTodayChallenge();
     if (!isChallengeDay || !exercise) {
       // No longer eligible (streak changed, or this got opened stale) --
       // nothing to play, just head back rather than show a broken screen.
