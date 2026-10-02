@@ -1,5 +1,5 @@
-import { getProgress, toDateKey, getLevel, addDays, getStreakBaseForDate, isChallengeDateKey, getYoutubeLinksEnabled } from "../storage.js";
-import { getExercise, pickExerciseForDate, pickChallengeForDate, youtubeHowToUrl } from "../exercises.js";
+import { getProgress, toDateKey, getLevel, addDays, getStreakBaseForDate, isChallengeDateKey, getYoutubeLinksEnabled, getExerciseForDate } from "../storage.js";
+import { getExercise, pickChallengeForDate, youtubeHowToUrl } from "../exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "../levels.js";
 import { openSheet } from "../sheet.js";
 import { unlockAudio } from "../audio.js";
@@ -18,11 +18,11 @@ function formatLongDate(dateKey) {
   return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 }
 
-// The same makeup exercise saveDay() will assign for this date — the base
-// daily-pool rotation (a rescue is already harder via the penalty
-// multiplier, so it doesn't also roll the bonus weekly challenge).
+// The same makeup exercise saveDay() will assign for this date — that day's
+// regular exercise, swapped or not (a rescue is already harder via the
+// penalty multiplier, so it doesn't also roll the bonus weekly challenge).
 function makeupExerciseFor(dateKey) {
-  return pickExerciseForDate(new Date(`${dateKey}T00:00:00`));
+  return getExerciseForDate(dateKey);
 }
 
 export function renderCalendar(root, nav) {

@@ -17,10 +17,13 @@ import {
   toDateKey,
   getYoutubeLinksEnabled,
   setYoutubeLinksEnabled,
+  getExerciseForDate,
+  getSwapStatus,
+  swapTodaysExercise,
 } from "../storage.js";
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
-import { pickExerciseForDate, CATEGORIES, youtubeHowToUrl } from "../exercises.js";
+import { CATEGORIES, youtubeHowToUrl } from "../exercises.js";
 import {
   DEFAULT_LEVEL,
   LEVEL_MIN,
@@ -44,7 +47,7 @@ export function renderToday(root, nav) {
   root.replaceChildren(tpl.content.cloneNode(true));
 
   const { doneToday, challengeDoneToday, progress } = getTodayStatus();
-  const baseExercise = pickExerciseForDate(new Date());
+  const baseExercise = getExerciseForDate(toDateKey(new Date()));
   const { exercise: challengeBaseExercise, isChallengeDay } = getTodayChallenge();
 
   renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });
@@ -80,6 +83,16 @@ export function renderToday(root, nav) {
     }
   }
   renderExerciseCard(getLevel() ?? DEFAULT_LEVEL);
+
+  const swapBtn = root.querySelector("#swap-btn");
+  const swapStatus = getSwapStatus();
+  swapBtn.classList.toggle("hidden", doneToday);
+  swapBtn.disabled = swapStatus.remaining === 0;
+  swapBtn.textContent =
+    swapStatus.remaining > 0
+      ? `🔄 Swap exercise · ${swapStatus.remaining} left`
+      : `🔄 No swaps left · back in ${swapStatus.resetsInDays} day${swapStatus.resetsInDays === 1 ? "" : "s"}`;
+  swapBtn.addEventListener("click", openSwapConfirm);
 
   const startBtn = root.querySelector("#start-btn");
   const doneState = root.querySelector("#done-state");
@@ -234,6 +247,22 @@ export function renderToday(root, nav) {
     sheet.el.querySelector("#delete-all-btn").addEventListener("click", () => {
       sheet.close();
       openDeleteAllConfirm();
+    });
+  }
+
+  function openSwapConfirm() {
+    const sheet = openSheet("tpl-confirm-swap");
+    const category = CATEGORIES.find((c) => c.id === baseExercise.category);
+    const left = swapStatus.remaining - 1;
+    sheet.el.querySelector(".confirm-message").textContent =
+      `Swap ${baseExercise.name} for a random ${category ? category.label : "same-group"} exercise? ` +
+      `That uses one of your ${swapStatus.limit} swaps — ${left} left afterwards. ` +
+      "Each swap comes back 7 days after you use it.";
+    sheet.el.querySelector(".cancel-btn").addEventListener("click", () => sheet.close());
+    sheet.el.querySelector(".confirm-btn").addEventListener("click", () => {
+      swapTodaysExercise();
+      sheet.close();
+      renderToday(root, nav);
     });
   }
 

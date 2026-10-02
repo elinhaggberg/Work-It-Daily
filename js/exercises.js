@@ -177,6 +177,15 @@ export function pickExerciseForDate(date) {
   return DAILY_POOL[idx];
 }
 
+// A random different move from the same muscle group as `exercise`, drawn
+// from the regular daily pool (challenge-only moves never show up here).
+// Every group has at least three regular moves, so there's always another
+// one to land on.
+export function pickSwapExercise(exercise) {
+  const candidates = DAILY_POOL.filter((e) => e.category === exercise.category && e.id !== exercise.id);
+  return candidates[Math.floor(Math.random() * candidates.length)] ?? null;
+}
+
 // Every 7th day of an active streak (7, 14, 21, ...) additionally unlocks a
 // harder move from the challenge pool -- on top of the regular daily
 // exercise above, not instead of it.

@@ -255,6 +255,9 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 .exercise-description { margin: 0; font-size: 0.9rem; color: var(--text-dim); line-height: 1.5; }
 .exercise-youtube-link, .save-day-youtube-link { display: inline-block; margin-top: 10px; color: var(--accent); font-weight: 600; font-size: 0.88rem; }
 
+.swap-btn { display: block; margin: 12px auto 0; padding: 8px 14px; font-size: 0.88rem; border: 1px solid var(--border); }
+.swap-btn:disabled { opacity: 0.55; }
+
 .set-tip {
   width: 100%;
   box-sizing: border-box;

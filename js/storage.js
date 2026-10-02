@@ -1,4 +1,4 @@
-import { pickExerciseForDate, pickChallengeForDate } from "./exercises.js";
+import { getExercise, pickExerciseForDate, pickChallengeForDate, pickSwapExercise } from "./exercises.js";
 import { scaleAmount, RESCUE_PENALTY_MULTIPLIER, LEVEL_ID_TO_VALUE } from "./levels.js";
 
 const PROGRESS_KEY = "wid_progress_v1";
@@ -173,8 +173,9 @@ export function getMilestoneShelfInfo(longestStreak, unlockedBadges) {
 
 function defaultProgress() {
   return {
-    completions: [], // [{ date, exerciseId, category, rescued }]
+    completions: [], // [{ date, exerciseId, category, rescued, swapped? }]
     challengeCompletions: [], // [{ date, exerciseId, category }] -- the optional weekly bonus
+    swaps: [], // [{ date, exerciseId }] -- one per swap used; the latest for a date is that day's exercise
     unlockedBadges: [], // badge ids
     lastBackupAt: null,
     backupBannerDismissedAt: null,
@@ -413,6 +414,65 @@ export function getTodayChallenge() {
   return computeTodayChallenge();
 }
 
+// ---- Exercise swaps ----
+
+const SWAPS_PER_WEEK = 2;
+const SWAP_WINDOW_DAYS = 7;
+
+// The exercise for `dateKey`: the move swapped in for that day if there is
+// one, otherwise the normal date-based rotation pick. Swaps are stored per
+// date, so one never shifts any other day's exercise or challenge.
+function exerciseForDate(raw, dateKey) {
+  const swap = [...raw.swaps].reverse().find((s) => s.date === dateKey);
+  return (swap && getExercise(swap.exerciseId)) || pickExerciseForDate(new Date(`${dateKey}T00:00:00`));
+}
+
+function dayWasSwapped(raw, dateKey) {
+  return raw.swaps.some((s) => s.date === dateKey);
+}
+
+export function getExerciseForDate(dateKey) {
+  return exerciseForDate(loadRaw(), dateKey);
+}
+
+// A swap is spent on the day it's used and comes back SWAP_WINDOW_DAYS later
+// -- a rolling window, so there's no fixed reset day to wait for.
+function swapsInWindow(raw, todayKey) {
+  const windowStart = addDays(todayKey, -(SWAP_WINDOW_DAYS - 1));
+  return raw.swaps.filter((s) => s.date >= windowStart && s.date <= todayKey);
+}
+
+// resetsInDays is when the next spent swap comes back (null if none are spent).
+export function getSwapStatus() {
+  const raw = loadRaw();
+  const todayKey = toDateKey(new Date());
+  const used = swapsInWindow(raw, todayKey);
+  let resetsInDays = null;
+  if (used.length > 0) {
+    const oldest = used.reduce((min, s) => (s.date < min ? s.date : min), todayKey);
+    const comesBack = new Date(`${addDays(oldest, SWAP_WINDOW_DAYS)}T00:00:00`);
+    resetsInDays = Math.round((comesBack - new Date(`${todayKey}T00:00:00`)) / 86400000);
+  }
+  return { limit: SWAPS_PER_WEEK, remaining: Math.max(0, SWAPS_PER_WEEK - used.length), resetsInDays };
+}
+
+// Swaps today's exercise for a random different one from the same muscle
+// group, spending one of the week's swaps. Only for a day still to be done.
+// Returns the new exercise, or null if no swap was made.
+export function swapTodaysExercise() {
+  const raw = loadRaw();
+  const todayKey = toDateKey(new Date());
+  if (raw.completions.some((c) => c.date === todayKey)) return null;
+  if (swapsInWindow(raw, todayKey).length >= SWAPS_PER_WEEK) return null;
+
+  const next = pickSwapExercise(exerciseForDate(raw, todayKey));
+  if (!next) return null;
+
+  raw.swaps.push({ date: todayKey, exerciseId: next.id });
+  saveRaw(raw);
+  return next;
+}
+
 // Records today's completion, updating the streak, freeze tokens, totals,
 // and any newly unlocked badges. Safe to call multiple times for the same
 // day (only the first call per day changes anything).
@@ -420,14 +480,22 @@ export function completeToday(exercise) {
   const raw = loadRaw();
   const todayKey = toDateKey(new Date());
 
-  if (raw.completions.some((c) => c.date === todayKey)) {
-    return { progress: getProgress(), newlyUnlocked: [], usedFreeze: false };
+  const existing = raw.completions.find((c) => c.date === todayKey);
+  if (existing) {
+    return { progress: getProgress(), newlyUnlocked: [], usedFreeze: false, swapped: existing.swapped === true };
   }
 
   const yesterdayKey = addDays(todayKey, -1);
   const statsBefore = computeStreakStats(raw.completions);
 
-  raw.completions.push({ date: todayKey, exerciseId: exercise.id, category: exercise.category, rescued: false });
+  const swapped = dayWasSwapped(raw, todayKey);
+  raw.completions.push({
+    date: todayKey,
+    exerciseId: exercise.id,
+    category: exercise.category,
+    rescued: false,
+    ...(swapped ? { swapped: true } : {}),
+  });
 
   const statsAfter = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, statsAfter);
@@ -435,7 +503,7 @@ export function completeToday(exercise) {
 
   const usedFreeze = statsAfter.bridgedDates.has(yesterdayKey) && !statsBefore.bridgedDates.has(yesterdayKey);
 
-  return { progress: getProgress(), newlyUnlocked, usedFreeze };
+  return { progress: getProgress(), newlyUnlocked, usedFreeze, swapped };
 }
 
 // Records the optional weekly bonus challenge exercise for today. Kept
@@ -491,10 +559,17 @@ export function saveDay(dateKey, level) {
   if (dateKey !== addDays(todayKey, -1)) return null;
   if (raw.completions.some((c) => c.date === dateKey)) return null;
 
-  const exercise = pickExerciseForDate(new Date(`${dateKey}T00:00:00`));
+  const exercise = exerciseForDate(raw, dateKey);
   const amount = scaleAmount(exercise, level, RESCUE_PENALTY_MULTIPLIER);
 
-  raw.completions.push({ date: dateKey, exerciseId: exercise.id, category: exercise.category, rescued: true });
+  const swapped = dayWasSwapped(raw, dateKey);
+  raw.completions.push({
+    date: dateKey,
+    exerciseId: exercise.id,
+    category: exercise.category,
+    rescued: true,
+    ...(swapped ? { swapped: true } : {}),
+  });
 
   const stats = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, stats);
@@ -521,7 +596,7 @@ export function saveDay(dateKey, level) {
 
   saveRaw(raw);
 
-  return { progress: getProgress(), newlyUnlocked, exercise, amount };
+  return { progress: getProgress(), newlyUnlocked, exercise, amount, swapped };
 }
 
 export function dismissBackupBanner() {
@@ -584,7 +659,19 @@ function sanitizeProgress(incoming) {
             typeof c.exerciseId === "string" &&
             typeof c.category === "string"
         )
-        .map((c) => ({ date: c.date, exerciseId: c.exerciseId, category: c.category, rescued: c.rescued === true }))
+        .map((c) => ({
+          date: c.date,
+          exerciseId: c.exerciseId,
+          category: c.category,
+          rescued: c.rescued === true,
+          ...(c.swapped === true ? { swapped: true } : {}),
+        }))
+    : [];
+
+  const swaps = Array.isArray(source.swaps)
+    ? source.swaps
+        .filter((s) => s && typeof s === "object" && typeof s.date === "string" && typeof s.exerciseId === "string")
+        .map((s) => ({ date: s.date, exerciseId: s.exerciseId }))
     : [];
 
   const challengeCompletions = Array.isArray(source.challengeCompletions)
@@ -609,6 +696,7 @@ function sanitizeProgress(incoming) {
   return {
     completions,
     challengeCompletions,
+    swaps,
     unlockedBadges,
     lastBackupAt: asTimestampOrNull(source.lastBackupAt),
     backupBannerDismissedAt: asTimestampOrNull(source.backupBannerDismissedAt),

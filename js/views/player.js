@@ -8,8 +8,10 @@ import {
   getLevel,
   getTodayChallenge,
   getStreakBaseForDate,
+  getExerciseForDate,
+  toDateKey,
 } from "../storage.js";
-import { pickExerciseForDate, pickChallengeForDate } from "../exercises.js";
+import { pickChallengeForDate } from "../exercises.js";
 import { scaledExercise, DEFAULT_LEVEL, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
 import { formatClock, formatDate } from "../util.js";
 import * as audio from "../audio.js";
@@ -37,7 +39,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     }
     baseExercise = exercise;
   } else if (rescueDateKey) {
-    baseExercise = pickExerciseForDate(new Date(`${rescueDateKey}T00:00:00`));
+    baseExercise = getExerciseForDate(rescueDateKey);
   } else if (isChallenge) {
     const { exercise, isChallengeDay } = getTodayChallenge();
     if (!isChallengeDay || !exercise) {
@@ -48,7 +50,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     }
     baseExercise = exercise;
   } else {
-    baseExercise = pickExerciseForDate(new Date());
+    baseExercise = getExerciseForDate(toDateKey(new Date()));
   }
   const exercise = scaledExercise(baseExercise, levelValue, rescueDateKey ? RESCUE_PENALTY_MULTIPLIER : 1);
 
@@ -200,6 +202,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
         levelValue,
         isRescue: true,
         rescueDateKey,
+        swapped: result.swapped,
       });
       return;
     }
@@ -222,6 +225,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       usedFreeze: result.usedFreeze,
       isFirstEver: result.progress.totalCompleted === 1,
       levelValue,
+      swapped: result.swapped,
     });
   }
 
