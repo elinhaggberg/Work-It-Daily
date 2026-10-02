@@ -24,7 +24,7 @@ export function buildDaySummaryText(dateKey) {
   const { currentStreak } = getStreakAsOf(dateKey);
 
   const lines = [`Work It Daily — ${formatDate(`${dateKey}T00:00:00`)}`];
-  lines.push(`💪 ${exercise.name} · ${amountText}`);
+  lines.push(`${completion.swapped ? "🔄" : "💪"} ${exercise.name} · ${amountText}`);
   lines.push(`🎚️ ${getLevelLabel(level)}`);
   lines.push(`🔥 ${currentStreak} day streak`);
   if (completion.rescued) lines.push("✅ Saved");

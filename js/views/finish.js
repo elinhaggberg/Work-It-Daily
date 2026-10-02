@@ -14,16 +14,17 @@ function tierIcon(badge) {
 // Wordle-style share card: a title line (app name + streak "score"), then
 // every following line leads with an emoji — no explanatory text needed to
 // read it at a glance.
-function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue, isRescue, rescueDateKey }) {
+function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue, isRescue, rescueDateKey, swapped }) {
   const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
   const levelLabel = getLevelLabel(levelValue);
   const isNewRecord = progress.currentStreak === progress.longestStreak && progress.longestStreak > 1;
 
   const lines = [`Work It Daily — ${formatDate(Date.now())}`];
+  const icon = swapped ? "🔄" : "💪";
   lines.push(
     isRescue
-      ? `💪 ${formatDate(`${rescueDateKey}T00:00:00`)} — ${exercise.name} · ${amount}`
-      : `💪 ${exercise.name} · ${amount}`
+      ? `${icon} ${formatDate(`${rescueDateKey}T00:00:00`)} — ${exercise.name} · ${amount}`
+      : `${icon} ${exercise.name} · ${amount}`
   );
   lines.push(`🎚️ ${levelLabel}`);
   lines.push(`🔥 ${progress.currentStreak} day streak`);

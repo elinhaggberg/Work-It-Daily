@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.7.1";
+export const APP_VERSION = "1.8.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.8.0",
+    notes: [
+      "New: swap today's exercise. Tap 🔄 Swap exercise on the home screen to trade it for a random different move from the same muscle group — 2 swaps, and each one comes back 7 days after you use it. A swap only changes that one day, and a swapped day shows 🔄 instead of 💪 in its summary",
+    ],
+  },
   {
     version: "1.7.1",
     notes: [

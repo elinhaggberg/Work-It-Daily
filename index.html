@@ -68,6 +68,7 @@
         <p class="exercise-amount"></p>
         <p class="exercise-description"></p>
         <a class="exercise-youtube-link hidden" target="_blank" rel="noopener noreferrer">Watch "how to" on YouTube ↗</a>
+        <button type="button" class="text-btn swap-btn" id="swap-btn"></button>
       </div>
 
       <p class="set-tip hidden" id="exercise-set-tip"></p>
@@ -202,6 +203,17 @@
     </div>
   </template>
 
+  <template id="tpl-confirm-swap">
+    <div class="sheet confirm-sheet">
+      <h2 class="confirm-title">Swap today's exercise?</h2>
+      <p class="confirm-message"></p>
+      <div class="form-actions">
+        <button type="button" class="text-btn secondary cancel-btn">Keep it</button>
+        <button type="button" class="text-btn primary confirm-btn">Swap</button>
+      </div>
+    </div>
+  </template>
+
   <template id="tpl-level-chooser">
     <div class="sheet">
       <header class="sheet-header">
@@ -278,6 +290,10 @@
         <section>
           <h3>How it works</h3>
           <p>Every day the app picks one bodyweight exercise for you. Do it, tap done, and your streak grows. The exercise rotates automatically — no setup needed.</p>
+        </section>
+        <section>
+          <h3>Swapping an exercise</h3>
+          <p>Not feeling today's exercise? Tap <strong>🔄 Swap exercise</strong> on the home screen to trade it for a random different one from the same muscle group. You get 2 swaps, and each one comes back 7 days after you use it. A swap only changes that one day — your other days and weekly challenges stay as they were — and a swapped day shows 🔄 instead of 💪 in its summary.</p>
         </section>
         <section>
           <h3>Level</h3>
