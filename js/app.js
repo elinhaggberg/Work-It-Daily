@@ -3,6 +3,7 @@ import { renderPlayer } from "./views/player.js";
 import { renderFinish } from "./views/finish.js";
 import { renderLibrary } from "./views/library.js";
 import { renderCalendar } from "./views/calendar.js";
+import { renderAdventure } from "./views/adventure.js";
 import { applyTheme } from "./theme.js";
 
 applyTheme();
@@ -29,6 +30,9 @@ const nav = {
   },
   toCalendar: () => {
     location.hash = "#/calendar";
+  },
+  toAdventure: () => {
+    location.hash = "#/adventure";
   },
 };
 
@@ -60,6 +64,9 @@ function route() {
       break;
     case "calendar":
       renderCalendar(root, nav);
+      break;
+    case "adventure":
+      renderAdventure(root, nav);
       break;
     default:
       renderToday(root, nav);

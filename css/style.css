@@ -798,3 +798,152 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 /* Save-day sheet */
 .save-day-exercise { font-weight: 700; margin: 10px 0 4px; }
 .save-day-penalty { margin: 0 0 14px; font-size: 0.85rem; color: var(--danger); }
+
+/* Adventures */
+.adventure-shelf { flex-wrap: wrap; row-gap: 8px; }
+.adventure-shelf-bar { flex-basis: 100%; height: 6px; border-radius: 999px; background: var(--surface); overflow: hidden; }
+.adventure-shelf-fill { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+
+.adventure-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adventure-header { display: flex; align-items: center; gap: 14px; }
+.adventure-header-avatar { width: 56px; flex-shrink: 0; }
+.adventure-header-text, .adventure-card-text { flex: 1; min-width: 0; }
+.adventure-theme-chip {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.adventure-title { margin: 0; font-size: 1.25rem; }
+.adventure-tagline { margin: 4px 0 0; color: var(--text-dim); font-size: 0.9rem; line-height: 1.45; }
+.adventure-section-title { margin: 0; font-size: 1rem; }
+
+.adventure-progress-label { margin: 0 0 6px; font-weight: 700; }
+.adventure-next { margin: 8px 0 0; color: var(--text-dim); font-size: 0.88rem; }
+.adventure-update-bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.adventure-update-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s ease; }
+
+.adventure-map {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  line-height: 0;
+}
+.adventure-map-svg { display: block; width: 100%; height: auto; }
+.adventure-avatar {
+  position: absolute;
+  width: 34px;
+  transform: translate(-50%, -88%);
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.adventure-journal { display: flex; flex-direction: column; gap: 8px; }
+.adventure-entry { padding: 12px 14px; border-radius: 12px; background: var(--surface-2); }
+.adventure-entry.is-locked { opacity: 0.55; }
+.adventure-entry-place { margin: 0; font-weight: 700; }
+.adventure-entry-day { margin: 1px 0 0; font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.adventure-entry-text { margin: 6px 0 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-dim); }
+.adventure-entry-day + .adventure-entry-text { margin-top: 4px; }
+
+.adventure-actions, .adventure-own-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.adventure-actions .text-btn { flex: 1; }
+.adventure-leave-btn { color: var(--danger); }
+
+.adventure-lengths { display: flex; gap: 8px; }
+.adventure-length-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.adventure-length-btn.active { background: var(--accent); color: var(--accent-text); }
+
+.adventure-list { display: flex; flex-direction: column; gap: 10px; }
+.adventure-card { padding: 0; overflow: hidden; }
+.adventure-card-main { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-align: left; }
+.adventure-card-emblem {
+  width: 58px;
+  height: 66px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  overflow: hidden;
+  background: linear-gradient(#7dd3fc, #bbf7d0);
+}
+.theme-space .adventure-card-emblem { background: linear-gradient(#0b1026, #4c1d95); }
+.theme-historical .adventure-card-emblem { background: linear-gradient(#f7e6bf, #deb887); }
+.adventure-card-emblem .mascot-wrap { width: 34px; }
+.adventure-card-title { margin: 0; font-weight: 700; }
+.adventure-card-tagline { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-dim); line-height: 1.4; }
+.adventure-card-trophy { font-size: 1.5rem; opacity: 0.35; filter: grayscale(1); }
+.adventure-card-trophy.is-earned { opacity: 1; filter: none; }
+.adventure-card-actions { display: flex; justify-content: flex-end; gap: 4px; padding: 0 10px 8px; }
+
+.adventure-trophies-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.adventure-trophies-count { color: var(--text-dim); font-size: 0.88rem; }
+.adventure-trophy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.adventure-trophy-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  text-align: center;
+  opacity: 0.55;
+}
+.adventure-trophy-item.is-earned {
+  opacity: 1;
+  background: linear-gradient(135deg, color-mix(in srgb, #f5b942 24%, var(--surface-2)), color-mix(in srgb, #f5b942 6%, var(--surface-2)));
+  border: 1px solid color-mix(in srgb, #f5b942 45%, transparent);
+}
+.adventure-trophy-icon { font-size: 1.6rem; }
+.adventure-trophy-name { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); line-height: 1.25; }
+.adventure-trophy-item.is-earned .adventure-trophy-name { color: var(--text); }
+.adventure-own { display: flex; flex-direction: column; gap: 6px; }
+.adventure-own-actions { margin-top: 8px; }
+.adventure-own-actions .text-btn { flex: 1 1 auto; }
+
+.adventure-import-text {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: 0.8rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.adventure-update {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-2) 14%, var(--surface-2));
+  text-align: left;
+}
+.adventure-update-title { margin: 0 0 8px; font-weight: 700; font-size: 0.92rem; }
+.adventure-chapter { margin-top: 10px; }
+.adventure-chapter-place { margin: 0; font-weight: 700; }
+.adventure-chapter-text { margin: 4px 0 0; font-size: 0.9rem; line-height: 1.5; }
+.adventure-trophy { margin-top: 10px; }

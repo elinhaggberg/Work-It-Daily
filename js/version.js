@@ -2,9 +2,16 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.8.0";
+export const APP_VERSION = "1.9.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.9.0",
+    notes: [
+      "New: Adventures. Pick a 7, 14 or 30 day route (fantasy, space or historical) and every day you complete or save moves you one step along the map, with a story snippet at each landmark and a unique trophy at the end. Your avatar dresses for the part, and it all runs alongside your streak without changing it",
+      "Make your own adventures: download the template or copy the AI prompt, fill it in (or let an AI write it) and import it, and share your adventures as files",
+    ],
+  },
   {
     version: "1.8.0",
     notes: [
