@@ -34,9 +34,15 @@ const nav = {
   toAdventure: () => {
     location.hash = "#/adventure";
   },
+  toAdventurePlayer: () => {
+    location.hash = "#/play/adventure";
+  },
 };
 
 function route() {
+  // A view may theme the whole page (the adventure player does); never let
+  // that leak into whatever is shown next.
+  root.className = "";
   const hash = location.hash || "#/today";
   const view = hash.replace(/^#\//, "").split("/")[0];
 
@@ -44,8 +50,13 @@ function route() {
     case "play": {
       // Supports all four combos: /play, /play/rescue/<date>,
       // /play/challenge, and /play/challenge/rescue/<date> (rescuing a past
-      // day's weekly challenge alongside its regular exercise).
+      // day's weekly challenge alongside its regular exercise), plus
+      // /play/adventure: today's exercise, started from the Adventure screen.
       const parts = hash.replace(/^#\//, "").split("/");
+      if (parts[1] === "adventure") {
+        renderPlayer(root, nav, null, false, true);
+        break;
+      }
       const isChallenge = parts[1] === "challenge";
       const rescueParts = isChallenge ? parts.slice(2) : parts.slice(1);
       const rescueDateKey = rescueParts[0] === "rescue" ? rescueParts[1] : null;

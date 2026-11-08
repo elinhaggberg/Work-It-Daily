@@ -2,9 +2,21 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.9.0";
+export const APP_VERSION = "1.10.0";
 
 export const CHANGELOG = [
+  {
+    version: "1.10.0",
+    notes: [
+      "You can now start today's exercise straight from the Adventure screen. Started there, the exercise screen takes on your adventure's look, with your dressed avatar, the route so far and how far it is to the next landmark",
+    ],
+  },
+  {
+    version: "1.9.1",
+    notes: [
+      "Adventures now show up in your summaries: a line like \"🐉 3/7 The Dragon's Pass\" on each day's summary, plus the trophy once you finish. There's also a new Copy adventure summary button on the Adventure screen",
+    ],
+  },
   {
     version: "1.9.0",
     notes: [

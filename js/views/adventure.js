@@ -1,4 +1,8 @@
 import {
+  getTodayStatus,
+  getExerciseForDate,
+  toDateKey,
+  getLevel,
   getAdventures,
   getActiveAdventure,
   startAdventure,
@@ -16,9 +20,12 @@ import {
 } from "../adventures.js";
 import { renderAdventureMap } from "../adventureMap.js";
 import { renderMascot } from "../mascot.js";
+import { scaledExercise, DEFAULT_LEVEL } from "../levels.js";
+import { unlockAudio } from "../audio.js";
 import { openSheet } from "../sheet.js";
 import { shareOrDownload, filenameFor } from "../share.js";
 import { formatDate } from "../util.js";
+import { buildAdventureSummaryText } from "../daySummary.js";
 
 function h(tag, className, text) {
   const node = document.createElement(tag);
@@ -31,6 +38,24 @@ function button(label, className, onClick) {
   const b = h("button", className, label);
   b.type = "button";
   b.addEventListener("click", onClick);
+  return b;
+}
+
+// "Copy adventure summary": where you are on the adventure and your trophies.
+// Null when there's nothing to share yet.
+function copySummaryButton() {
+  const text = buildAdventureSummaryText();
+  if (!text) return null;
+  const label = "Copy adventure summary";
+  const b = button(label, "text-btn secondary adventure-copy-btn", async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      b.textContent = "Copied ✓";
+    } catch {
+      b.textContent = "Couldn't copy";
+    }
+    setTimeout(() => (b.textContent = label), 1600);
+  });
   return b;
 }
 
@@ -104,6 +129,8 @@ export function renderAdventure(root, nav) {
     }
     nodes.push(progress);
 
+    nodes.push(todayCard(state, theme));
+
     const mapCard = h("div", "adventure-map");
     nodes.push(mapCard);
 
@@ -132,6 +159,7 @@ export function renderAdventure(root, nav) {
 
     const actions = h("div", "adventure-actions");
     actions.append(
+      copySummaryButton(),
       button("Share adventure", "text-btn secondary", () => shareAdventure(adventure)),
       button("Leave adventure", "text-btn adventure-leave-btn", () =>
         confirmSheet({
@@ -152,6 +180,41 @@ export function renderAdventure(root, nav) {
     // The map needs to be in the document before it can measure its road.
     queueMicrotask(() => renderAdventureMap(mapCard, adventure, steps));
     return nodes;
+  }
+
+  // Today's exercise, startable right from the adventure: the next step on
+  // the route. Once it's done, just says so.
+  function todayCard(state, theme) {
+    const { steps, total, next } = state;
+    const card = h("div", `card adventure-today theme-${state.adventure.theme}`);
+    const { doneToday } = getTodayStatus();
+    if (doneToday) {
+      card.append(
+        h("p", "adventure-theme-chip", `Today's step · day ${steps} of ${total}`),
+        h("p", "adventure-today-done", "✅ Today's step is done. Rest up, the road continues tomorrow.")
+      );
+      return card;
+    }
+    const exercise = scaledExercise(getExerciseForDate(toDateKey(new Date())), getLevel() ?? DEFAULT_LEVEL);
+    const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
+    card.append(
+      h("p", "adventure-theme-chip", `Today's step · day ${steps + 1} of ${total}`),
+      h("h3", "adventure-today-name", exercise.name),
+      h("p", "adventure-today-amount", amount)
+    );
+    if (next) {
+      const left = next.day - steps;
+      card.append(
+        h("p", "adventure-next", left === 1 ? `Finish today to reach ${next.icon} ${next.place}!` : `${left} days to ${next.icon} ${next.place}`)
+      );
+    }
+    card.append(
+      button(`${theme.icon} Start today's exercise`, "text-btn primary big-btn adventure-today-btn", () => {
+        unlockAudio();
+        nav.toAdventurePlayer();
+      })
+    );
+    return card;
   }
 
   // ---- No adventure yet: choose one ----
@@ -182,7 +245,7 @@ export function renderAdventure(root, nav) {
     const list = h("div", "adventure-list");
     for (const adventure of getAdventures().filter((a) => a.days === browsingLength)) list.append(adventureCard(adventure, trophies));
     nodes.push(list);
-    nodes.push(trophyShelf());
+    nodes.push(trophyShelf(true));
     nodes.push(createYourOwn());
     return nodes;
   }
@@ -238,7 +301,9 @@ export function renderAdventure(root, nav) {
     return card;
   }
 
-  function trophyShelf() {
+  // The copy-summary button lives here only on the picker; a running adventure
+  // has its own in the actions row.
+  function trophyShelf(withCopy = false) {
     const trophies = getAdventureTrophies();
     const adventures = getAdventures();
     const earnedCount = adventures.filter((a) => trophies.some((t) => t.adventureId === a.id)).length;
@@ -260,6 +325,11 @@ export function renderAdventure(root, nav) {
       grid.append(item);
     }
     shelf.append(grid);
+    const copy = withCopy && earnedCount > 0 ? copySummaryButton() : null;
+    if (copy) {
+      copy.classList.add("adventure-trophies-copy");
+      shelf.append(copy);
+    }
     return shelf;
   }
 

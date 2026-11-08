@@ -174,7 +174,7 @@ export function getMilestoneShelfInfo(longestStreak, unlockedBadges) {
 
 function defaultProgress() {
   return {
-    completions: [], // [{ date, exerciseId, category, rescued, swapped? }]
+    completions: [], // [{ date, exerciseId, category, rescued, swapped?, adventure?: { adventureId, step } }]
     challengeCompletions: [], // [{ date, exerciseId, category }] -- the optional weekly bonus
     swaps: [], // [{ date, exerciseId }] -- one per swap used; the latest for a date is that day's exercise
     adventure: null, // { adventureId, startDate } while an adventure is running
@@ -504,12 +504,15 @@ function activeAdventure(raw) {
 
 // Called right after a completion is pushed. `before` is activeAdventure()
 // from just before it. Returns what the finish screen should show, and when
-// that step was the last one, ends the adventure and records its trophy.
-function adventureEvent(raw, before, todayKey) {
+// that step was the last one, ends the adventure and records its trophy. The
+// step is also stamped onto the completion itself, so that day's summary can
+// still say "3/7 The Dragon's Pass" long after the adventure has moved on.
+function adventureEvent(raw, before, todayKey, completion) {
   const after = activeAdventure(raw);
   if (!before || !after || after.steps <= before.steps) return null;
 
   const { adventure, steps } = after;
+  completion.adventure = { adventureId: adventure.id, step: steps };
   const finished = steps >= adventure.days;
   let newTrophy = false;
   if (finished) {
@@ -605,17 +608,18 @@ export function completeToday(exercise) {
 
   const swapped = dayWasSwapped(raw, todayKey);
   const adventureBefore = activeAdventure(raw);
-  raw.completions.push({
+  const completion = {
     date: todayKey,
     exerciseId: exercise.id,
     category: exercise.category,
     rescued: false,
     ...(swapped ? { swapped: true } : {}),
-  });
+  };
+  raw.completions.push(completion);
 
   const statsAfter = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, statsAfter);
-  const adventure = adventureEvent(raw, adventureBefore, todayKey);
+  const adventure = adventureEvent(raw, adventureBefore, todayKey, completion);
   saveRaw(raw);
 
   const usedFreeze = statsAfter.bridgedDates.has(yesterdayKey) && !statsBefore.bridgedDates.has(yesterdayKey);
@@ -681,17 +685,18 @@ export function saveDay(dateKey, level) {
 
   const swapped = dayWasSwapped(raw, dateKey);
   const adventureBefore = activeAdventure(raw);
-  raw.completions.push({
+  const completion = {
     date: dateKey,
     exerciseId: exercise.id,
     category: exercise.category,
     rescued: true,
     ...(swapped ? { swapped: true } : {}),
-  });
+  };
+  raw.completions.push(completion);
 
   const stats = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, stats);
-  const adventure = adventureEvent(raw, adventureBefore, todayKey);
+  const adventure = adventureEvent(raw, adventureBefore, todayKey, completion);
 
   // Completing today's live challenge and rescuing yesterday can happen in
   // either order. If the challenge was completed under today's date while
@@ -784,6 +789,13 @@ function sanitizeProgress(incoming) {
           category: c.category,
           rescued: c.rescued === true,
           ...(c.swapped === true ? { swapped: true } : {}),
+          ...(c.adventure &&
+          typeof c.adventure === "object" &&
+          typeof c.adventure.adventureId === "string" &&
+          Number.isInteger(c.adventure.step) &&
+          c.adventure.step > 0
+            ? { adventure: { adventureId: c.adventure.adventureId, step: c.adventure.step } }
+            : {}),
         }))
     : [];
 
