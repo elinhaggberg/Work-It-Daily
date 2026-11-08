@@ -1,4 +1,8 @@
 import {
+  getTodayStatus,
+  getExerciseForDate,
+  toDateKey,
+  getLevel,
   getAdventures,
   getActiveAdventure,
   startAdventure,
@@ -16,6 +20,8 @@ import {
 } from "../adventures.js";
 import { renderAdventureMap } from "../adventureMap.js";
 import { renderMascot } from "../mascot.js";
+import { scaledExercise, DEFAULT_LEVEL } from "../levels.js";
+import { unlockAudio } from "../audio.js";
 import { openSheet } from "../sheet.js";
 import { shareOrDownload, filenameFor } from "../share.js";
 import { formatDate } from "../util.js";
@@ -123,6 +129,8 @@ export function renderAdventure(root, nav) {
     }
     nodes.push(progress);
 
+    nodes.push(todayCard(state, theme));
+
     const mapCard = h("div", "adventure-map");
     nodes.push(mapCard);
 
@@ -172,6 +180,41 @@ export function renderAdventure(root, nav) {
     // The map needs to be in the document before it can measure its road.
     queueMicrotask(() => renderAdventureMap(mapCard, adventure, steps));
     return nodes;
+  }
+
+  // Today's exercise, startable right from the adventure: the next step on
+  // the route. Once it's done, just says so.
+  function todayCard(state, theme) {
+    const { steps, total, next } = state;
+    const card = h("div", `card adventure-today theme-${state.adventure.theme}`);
+    const { doneToday } = getTodayStatus();
+    if (doneToday) {
+      card.append(
+        h("p", "adventure-theme-chip", `Today's step · day ${steps} of ${total}`),
+        h("p", "adventure-today-done", "✅ Today's step is done. Rest up, the road continues tomorrow.")
+      );
+      return card;
+    }
+    const exercise = scaledExercise(getExerciseForDate(toDateKey(new Date())), getLevel() ?? DEFAULT_LEVEL);
+    const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
+    card.append(
+      h("p", "adventure-theme-chip", `Today's step · day ${steps + 1} of ${total}`),
+      h("h3", "adventure-today-name", exercise.name),
+      h("p", "adventure-today-amount", amount)
+    );
+    if (next) {
+      const left = next.day - steps;
+      card.append(
+        h("p", "adventure-next", left === 1 ? `Finish today to reach ${next.icon} ${next.place}!` : `${left} days to ${next.icon} ${next.place}`)
+      );
+    }
+    card.append(
+      button(`${theme.icon} Start today's exercise`, "text-btn primary big-btn adventure-today-btn", () => {
+        unlockAudio();
+        nav.toAdventurePlayer();
+      })
+    );
+    return card;
   }
 
   // ---- No adventure yet: choose one ----

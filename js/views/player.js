@@ -10,7 +10,10 @@ import {
   getStreakBaseForDate,
   getExerciseForDate,
   toDateKey,
+  getActiveAdventure,
 } from "../storage.js";
+import { THEMES } from "../adventures.js";
+import { renderMascot } from "../mascot.js";
 import { pickChallengeForDate } from "../exercises.js";
 import { scaledExercise, DEFAULT_LEVEL, RESCUE_PENALTY_MULTIPLIER } from "../levels.js";
 import { formatClock, formatDate } from "../util.js";
@@ -22,7 +25,7 @@ const LEAD_IN_SECONDS = 3;
 const WARNING_SECONDS = 3;
 const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 
-export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = false) {
+export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = false, fromAdventure = false) {
   const levelValue = getLevel() ?? DEFAULT_LEVEL;
 
   let baseExercise;
@@ -54,6 +57,11 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
   }
   const exercise = scaledExercise(baseExercise, levelValue, rescueDateKey ? RESCUE_PENALTY_MULTIPLIER : 1);
 
+  // Started from the Adventure screen: the same exercise, dressed for the
+  // story. Only today's regular exercise gets this, and only while the
+  // adventure is still running (a stale link just plays normally).
+  const adventureState = fromAdventure && !rescueDateKey && !isChallenge ? getActiveAdventure() : null;
+
   const tpl = document.getElementById("tpl-player");
   root.replaceChildren(tpl.content.cloneNode(true));
 
@@ -70,6 +78,8 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       : "⭐ Weekly challenge — bonus, on top of today's exercise";
     challengeBannerEl.classList.remove("hidden");
   }
+
+  if (adventureState) applyAdventureFlair(root, adventureState);
 
   const exerciseNameEl = root.querySelector("#exercise-name");
   const bigNumberEl = root.querySelector("#big-number");
@@ -204,6 +214,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
         rescueDateKey,
         swapped: result.swapped,
         adventure: result.adventure,
+        fromAdventure: false,
       });
       return;
     }
@@ -228,6 +239,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       levelValue,
       swapped: result.swapped,
       adventure: result.adventure,
+      fromAdventure: Boolean(adventureState),
     });
   }
 
@@ -235,6 +247,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
     stopTicking();
     setWakeLockWanted(false);
     if (rescueDateKey) nav.toCalendar();
+    else if (adventureState) nav.toAdventure();
     else nav.toToday();
   }
 
@@ -273,5 +286,41 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       bigNumberEl.className = "big-number reps-mode";
       bigLabelEl.textContent = "reps — tap done when finished";
     }
+  }
+}
+
+// Themed backdrop, the dressed avatar, today's step on the route and how far
+// the next landmark is. The theme class goes on the page root (app.js clears
+// it on every navigation) so the CSS variables restyle the whole screen.
+function applyAdventureFlair(root, state) {
+  const { adventure, steps, total, next } = state;
+  const theme = THEMES.find((t) => t.id === adventure.theme) || THEMES[0];
+  root.classList.add("player-adventure", `theme-${adventure.theme}`);
+
+  const avatar = root.querySelector("#adventure-player-avatar");
+  avatar.classList.remove("hidden");
+  renderMascot(avatar, { mood: "idle", size: 56, outfit: adventure.theme });
+
+  const banner = root.querySelector("#adventure-player-banner");
+  banner.textContent = `${theme.icon} ${adventure.title} · day ${steps + 1} of ${total}`;
+  banner.classList.remove("hidden");
+
+  const track = root.querySelector("#adventure-player-track");
+  track.classList.remove("hidden");
+  const landmarkDays = new Set(adventure.chapters.map((c) => c.day));
+  for (let day = 1; day <= total; day++) {
+    const segment = document.createElement("span");
+    if (day <= steps) segment.className = "is-done";
+    else if (day === steps + 1) segment.className = "is-today";
+    if (landmarkDays.has(day)) segment.classList.add("is-landmark");
+    track.append(segment);
+  }
+
+  if (next) {
+    const left = next.day - steps;
+    const nextEl = root.querySelector("#adventure-player-next");
+    nextEl.textContent =
+      left === 1 ? `Finish today to reach ${next.icon} ${next.place}!` : `${left} days to ${next.icon} ${next.place}`;
+    nextEl.classList.remove("hidden");
   }
 }

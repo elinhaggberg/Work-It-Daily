@@ -950,3 +950,70 @@ h1, h2, h3 { margin: 0; font-weight: 700; font-family: var(--font-heading); }
 
 .adventure-actions .adventure-copy-btn { flex: 1 1 100%; }
 .adventure-trophies-copy { width: 100%; margin-top: 10px; }
+
+/* Today's step on the Adventure screen */
+.adventure-today { text-align: center; }
+.adventure-today .adventure-theme-chip { margin-bottom: 6px; }
+.adventure-today-name { margin: 0; font-size: 1.3rem; }
+.adventure-today-amount { margin: 4px 0 0; font-weight: 600; color: var(--text-dim); }
+.adventure-today .adventure-next { margin: 8px 0 0; }
+.adventure-today-btn { margin: 14px 0 0; }
+.adventure-today-done { margin: 0; font-weight: 600; line-height: 1.45; }
+
+/* The player when started from an adventure: the page takes on the theme's
+   colours (everything below reads them through the usual variables) and
+   shows the dressed avatar and the route. */
+.player-adventure.theme-fantasy {
+  --text: #0f2a1a;
+  --text-dim: #3f6a4f;
+  --surface-2: rgba(255, 255, 255, 0.55);
+  --bg: #bbf7d0;
+  background:
+    radial-gradient(ellipse 120% 40% at 50% 112%, #4ade80 0 60%, transparent 61%),
+    radial-gradient(ellipse 90% 30% at 15% 108%, #22c55e 0 60%, transparent 61%),
+    linear-gradient(#7dd3fc, #d9f99d);
+}
+.player-adventure.theme-space {
+  --text: #f2f3f5;
+  --text-dim: #a5b4fc;
+  --surface-2: rgba(255, 255, 255, 0.12);
+  --bg: #0b1026;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 78% 12%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 40% 42%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 56%, #fff, transparent),
+    radial-gradient(1px 1px at 22% 74%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 62% 86%, #fff, transparent),
+    radial-gradient(1px 1px at 8% 52%, #fff, transparent),
+    radial-gradient(circle at 92% 100%, #b91c1c 0 70px, transparent 71px),
+    linear-gradient(#0b1026, #3b0764);
+}
+.player-adventure.theme-historical {
+  --text: #3b2a14;
+  --text-dim: #7c5a2a;
+  --surface-2: rgba(124, 45, 18, 0.14);
+  --bg: #f1d9a4;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(124, 45, 18, 0.28) 100%),
+    linear-gradient(#f7e6bf, #e2c48a);
+}
+.player-adventure { color: var(--text); }
+.adventure-player-avatar { width: 56px; margin: 0 auto -4px; }
+.adventure-player-banner {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+.adventure-segments { display: flex; align-items: flex-end; gap: 2px; width: 100%; max-width: 300px; height: 14px; }
+.adventure-segments > span { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); }
+.adventure-segments > span.is-landmark { height: 10px; }
+.adventure-segments > span.is-done { background: var(--accent); }
+.adventure-segments > span.is-today { background: var(--text); animation: adventure-pulse 1.2s ease-in-out infinite; }
+@keyframes adventure-pulse { 50% { opacity: 0.35; } }
+.adventure-player-next { margin: 0; font-size: 0.88rem; font-weight: 600; color: var(--text-dim); }

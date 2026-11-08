@@ -38,7 +38,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
 }
 
 export function renderFinish(root, nav, result) {
-  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver, isRescue, rescueDateKey, adventure } = result;
+  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver, isRescue, rescueDateKey, adventure, fromAdventure } = result;
 
   const tpl = document.getElementById("tpl-finish");
   root.replaceChildren(tpl.content.cloneNode(true));
@@ -140,6 +140,11 @@ export function renderFinish(root, nav, result) {
   });
 
   const doneBtn = root.querySelector("#done-btn");
-  doneBtn.textContent = isRescue ? "Back to calendar" : "Back to today";
-  doneBtn.addEventListener("click", () => (isRescue ? nav.toCalendar() : nav.toToday()));
+  const backToAdventure = fromAdventure && !isRescue;
+  doneBtn.textContent = isRescue ? "Back to calendar" : backToAdventure ? "Back to adventure" : "Back to today";
+  doneBtn.addEventListener("click", () => {
+    if (isRescue) nav.toCalendar();
+    else if (backToAdventure) nav.toAdventure();
+    else nav.toToday();
+  });
 }
