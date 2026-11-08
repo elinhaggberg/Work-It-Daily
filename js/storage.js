@@ -1,4 +1,5 @@
 import { getExercise, pickExerciseForDate, pickChallengeForDate, pickSwapExercise } from "./exercises.js";
+import { BUILT_IN_ADVENTURES, ADVENTURE_FORMAT, parseAdventure } from "./adventures.js";
 import { scaleAmount, RESCUE_PENALTY_MULTIPLIER, LEVEL_ID_TO_VALUE } from "./levels.js";
 
 const PROGRESS_KEY = "wid_progress_v1";
@@ -176,6 +177,9 @@ function defaultProgress() {
     completions: [], // [{ date, exerciseId, category, rescued, swapped? }]
     challengeCompletions: [], // [{ date, exerciseId, category }] -- the optional weekly bonus
     swaps: [], // [{ date, exerciseId }] -- one per swap used; the latest for a date is that day's exercise
+    adventure: null, // { adventureId, startDate } while an adventure is running
+    adventureTrophies: [], // [{ adventureId, earnedDate }] -- one per finished adventure
+    customAdventures: [], // imported/hand-written adventures, each with a "custom-..." id
     unlockedBadges: [], // badge ids
     lastBackupAt: null,
     backupBannerDismissedAt: null,
@@ -473,6 +477,117 @@ export function swapTodaysExercise() {
   return next;
 }
 
+// ---- Adventures ----
+// An optional story layer on top of the streak: pick a route, and every
+// completed *or rescued* day takes you one step further. Progress is derived
+// from the completions list (like the streak itself) instead of stored as a
+// counter, so a rescue just works and nothing can drift out of sync.
+
+const MAX_CUSTOM_ADVENTURES = 20;
+
+function allAdventures(raw) {
+  return [...BUILT_IN_ADVENTURES, ...raw.customAdventures];
+}
+
+function findAdventure(raw, id) {
+  return allAdventures(raw).find((a) => a.id === id) || null;
+}
+
+function activeAdventure(raw) {
+  if (!raw.adventure) return null;
+  const adventure = findAdventure(raw, raw.adventure.adventureId);
+  if (!adventure) return null;
+  const { startDate } = raw.adventure;
+  const steps = Math.min(adventure.days, raw.completions.filter((c) => c.date >= startDate).length);
+  return { adventure, startDate, steps };
+}
+
+// Called right after a completion is pushed. `before` is activeAdventure()
+// from just before it. Returns what the finish screen should show, and when
+// that step was the last one, ends the adventure and records its trophy.
+function adventureEvent(raw, before, todayKey) {
+  const after = activeAdventure(raw);
+  if (!before || !after || after.steps <= before.steps) return null;
+
+  const { adventure, steps } = after;
+  const finished = steps >= adventure.days;
+  let newTrophy = false;
+  if (finished) {
+    raw.adventure = null;
+    if (!raw.adventureTrophies.some((t) => t.adventureId === adventure.id)) {
+      raw.adventureTrophies.push({ adventureId: adventure.id, earnedDate: todayKey });
+      newTrophy = true;
+    }
+  }
+  return {
+    adventure,
+    steps,
+    total: adventure.days,
+    chapter: adventure.chapters.find((c) => c.day === steps) || null,
+    finished,
+    newTrophy,
+  };
+}
+
+export function getAdventures() {
+  return allAdventures(loadRaw());
+}
+
+export function getActiveAdventure() {
+  const state = activeAdventure(loadRaw());
+  if (!state) return null;
+  const { adventure, startDate, steps } = state;
+  return {
+    adventure,
+    startDate,
+    steps,
+    total: adventure.days,
+    reached: adventure.chapters.filter((c) => c.day <= steps),
+    next: adventure.chapters.find((c) => c.day > steps) || null,
+  };
+}
+
+// Starts counting from today: if today's exercise is already done, it counts
+// as the first step. Only one adventure runs at a time.
+export function startAdventure(adventureId) {
+  const raw = loadRaw();
+  if (activeAdventure(raw) || !findAdventure(raw, adventureId)) return null;
+  raw.adventure = { adventureId, startDate: toDateKey(new Date()) };
+  saveRaw(raw);
+  return getActiveAdventure();
+}
+
+export function abandonAdventure() {
+  const raw = loadRaw();
+  raw.adventure = null;
+  saveRaw(raw);
+}
+
+export function getAdventureTrophies() {
+  return loadRaw().adventureTrophies;
+}
+
+// `data` is an already-parsed JSON object. Throws an Error with a readable
+// message if it isn't a valid adventure.
+export function importAdventure(data) {
+  const parsed = parseAdventure(data);
+  const raw = loadRaw();
+  if (raw.customAdventures.length >= MAX_CUSTOM_ADVENTURES) {
+    throw new Error(`You can keep up to ${MAX_CUSTOM_ADVENTURES} custom adventures. Remove one first.`);
+  }
+  const adventure = { id: `custom-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, ...parsed };
+  raw.customAdventures.push(adventure);
+  saveRaw(raw);
+  return adventure;
+}
+
+export function removeCustomAdventure(id) {
+  const raw = loadRaw();
+  raw.customAdventures = raw.customAdventures.filter((a) => a.id !== id);
+  if (raw.adventure && raw.adventure.adventureId === id) raw.adventure = null;
+  saveRaw(raw);
+}
+
 // Records today's completion, updating the streak, freeze tokens, totals,
 // and any newly unlocked badges. Safe to call multiple times for the same
 // day (only the first call per day changes anything).
@@ -482,13 +597,14 @@ export function completeToday(exercise) {
 
   const existing = raw.completions.find((c) => c.date === todayKey);
   if (existing) {
-    return { progress: getProgress(), newlyUnlocked: [], usedFreeze: false, swapped: existing.swapped === true };
+    return { progress: getProgress(), newlyUnlocked: [], usedFreeze: false, swapped: existing.swapped === true, adventure: null };
   }
 
   const yesterdayKey = addDays(todayKey, -1);
   const statsBefore = computeStreakStats(raw.completions);
 
   const swapped = dayWasSwapped(raw, todayKey);
+  const adventureBefore = activeAdventure(raw);
   raw.completions.push({
     date: todayKey,
     exerciseId: exercise.id,
@@ -499,11 +615,12 @@ export function completeToday(exercise) {
 
   const statsAfter = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, statsAfter);
+  const adventure = adventureEvent(raw, adventureBefore, todayKey);
   saveRaw(raw);
 
   const usedFreeze = statsAfter.bridgedDates.has(yesterdayKey) && !statsBefore.bridgedDates.has(yesterdayKey);
 
-  return { progress: getProgress(), newlyUnlocked, usedFreeze, swapped };
+  return { progress: getProgress(), newlyUnlocked, usedFreeze, swapped, adventure };
 }
 
 // Records the optional weekly bonus challenge exercise for today. Kept
@@ -563,6 +680,7 @@ export function saveDay(dateKey, level) {
   const amount = scaleAmount(exercise, level, RESCUE_PENALTY_MULTIPLIER);
 
   const swapped = dayWasSwapped(raw, dateKey);
+  const adventureBefore = activeAdventure(raw);
   raw.completions.push({
     date: dateKey,
     exerciseId: exercise.id,
@@ -573,6 +691,7 @@ export function saveDay(dateKey, level) {
 
   const stats = computeStreakStats(raw.completions);
   const newlyUnlocked = checkForNewBadges(raw, stats);
+  const adventure = adventureEvent(raw, adventureBefore, todayKey);
 
   // Completing today's live challenge and rescuing yesterday can happen in
   // either order. If the challenge was completed under today's date while
@@ -596,7 +715,7 @@ export function saveDay(dateKey, level) {
 
   saveRaw(raw);
 
-  return { progress: getProgress(), newlyUnlocked, exercise, amount, swapped };
+  return { progress: getProgress(), newlyUnlocked, exercise, amount, swapped, adventure };
 }
 
 export function dismissBackupBanner() {
@@ -687,6 +806,35 @@ function sanitizeProgress(incoming) {
         .map((c) => ({ date: c.date, exerciseId: c.exerciseId, category: c.category }))
     : [];
 
+  const isDateKey = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+  const adventure =
+    source.adventure &&
+    typeof source.adventure === "object" &&
+    typeof source.adventure.adventureId === "string" &&
+    isDateKey(source.adventure.startDate)
+      ? { adventureId: source.adventure.adventureId, startDate: source.adventure.startDate }
+      : null;
+
+  const adventureTrophies = Array.isArray(source.adventureTrophies)
+    ? source.adventureTrophies
+        .filter((t) => t && typeof t === "object" && typeof t.adventureId === "string" && isDateKey(t.earnedDate))
+        .map((t) => ({ adventureId: t.adventureId, earnedDate: t.earnedDate }))
+    : [];
+
+  const customAdventures = [];
+  if (Array.isArray(source.customAdventures)) {
+    for (const a of source.customAdventures.slice(0, MAX_CUSTOM_ADVENTURES)) {
+      if (!a || typeof a.id !== "string" || !/^custom-[a-z0-9]{1,24}$/.test(a.id)) continue;
+      if (customAdventures.some((x) => x.id === a.id)) continue;
+      try {
+        customAdventures.push({ id: a.id, ...parseAdventure({ ...a, type: ADVENTURE_FORMAT }) });
+      } catch {
+        // an entry that no longer validates is dropped, not trusted
+      }
+    }
+  }
+
   const unlockedBadges = Array.isArray(source.unlockedBadges)
     ? source.unlockedBadges.filter((b) => typeof b === "string")
     : [];
@@ -697,6 +845,9 @@ function sanitizeProgress(incoming) {
     completions,
     challengeCompletions,
     swaps,
+    adventure,
+    adventureTrophies,
+    customAdventures,
     unlockedBadges,
     lastBackupAt: asTimestampOrNull(source.lastBackupAt),
     backupBannerDismissedAt: asTimestampOrNull(source.backupBannerDismissedAt),

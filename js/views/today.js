@@ -20,7 +20,9 @@ import {
   getExerciseForDate,
   getSwapStatus,
   swapTodaysExercise,
+  getActiveAdventure,
 } from "../storage.js";
+import { THEMES } from "../adventures.js";
 import { checkOnboarding } from "../onboarding.js";
 import { openDaySummarySheet } from "../daySummary.js";
 import { CATEGORIES, youtubeHowToUrl } from "../exercises.js";
@@ -50,7 +52,13 @@ export function renderToday(root, nav) {
   const baseExercise = getExerciseForDate(toDateKey(new Date()));
   const { exercise: challengeBaseExercise, isChallengeDay } = getTodayChallenge();
 
-  renderMascot(root.querySelector("#mascot-slot"), { mood: doneToday ? "cheer" : "idle", size: 108 });
+  // An active adventure also dresses the mascot for the part.
+  const adventureState = getActiveAdventure();
+  renderMascot(root.querySelector("#mascot-slot"), {
+    mood: doneToday ? "cheer" : "idle",
+    size: 108,
+    outfit: adventureState ? adventureState.adventure.theme : null,
+  });
 
   root.querySelector("#current-streak").textContent = progress.currentStreak;
   root.querySelector("#longest-streak").textContent = progress.longestStreak;
@@ -161,6 +169,16 @@ export function renderToday(root, nav) {
   }
   renderBadgeShelf(root);
   root.querySelector("#badge-shelf").addEventListener("click", openBadgesSheet);
+
+  const adventureBtn = root.querySelector("#adventure-btn");
+  if (adventureState) {
+    const theme = THEMES.find((t) => t.id === adventureState.adventure.theme) || THEMES[0];
+    adventureBtn.querySelector(".adventure-shelf-label").textContent = `${theme.icon} ${adventureState.adventure.title}`;
+    adventureBtn.querySelector(".badge-shelf-count").textContent = `${adventureState.steps}/${adventureState.total}`;
+    adventureBtn.querySelector(".adventure-shelf-bar").classList.remove("hidden");
+    adventureBtn.querySelector(".adventure-shelf-fill").style.width = `${(adventureState.steps / adventureState.total) * 100}%`;
+  }
+  adventureBtn.addEventListener("click", () => nav.toAdventure());
 
   if (getLevel() === null) {
     openLevelChooser();

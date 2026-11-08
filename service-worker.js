@@ -1,4 +1,4 @@
-const CACHE_NAME = "work-it-daily-v5";
+const CACHE_NAME = "work-it-daily-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -20,12 +20,15 @@ const APP_SHELL = [
   "./js/mascot.js",
   "./js/exercises.js",
   "./js/levels.js",
+  "./js/adventures.js",
+  "./js/adventureMap.js",
   "./js/version.js",
   "./js/views/today.js",
   "./js/views/player.js",
   "./js/views/finish.js",
   "./js/views/library.js",
   "./js/views/calendar.js",
+  "./js/views/adventure.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",

@@ -203,6 +203,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
         isRescue: true,
         rescueDateKey,
         swapped: result.swapped,
+        adventure: result.adventure,
       });
       return;
     }
@@ -226,6 +227,7 @@ export function renderPlayer(root, nav, rescueDateKey = null, isChallenge = fals
       isFirstEver: result.progress.totalCompleted === 1,
       levelValue,
       swapped: result.swapped,
+      adventure: result.adventure,
     });
   }
 

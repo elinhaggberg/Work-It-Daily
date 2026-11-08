@@ -36,7 +36,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
 }
 
 export function renderFinish(root, nav, result) {
-  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver, isRescue, rescueDateKey } = result;
+  const { exercise, progress, newlyUnlocked, usedFreeze, isFirstEver, isRescue, rescueDateKey, adventure } = result;
 
   const tpl = document.getElementById("tpl-finish");
   root.replaceChildren(tpl.content.cloneNode(true));
@@ -46,7 +46,11 @@ export function renderFinish(root, nav, result) {
   const confettiOptions = isPlayful ? { colors: PLAYFUL_SWATCHES.map((s) => s.accent) } : {};
   requestAnimationFrame(() => launchConfetti(canvas, confettiOptions));
 
-  renderMascot(root.querySelector("#mascot-slot"), { mood: "cheer", size: 128 });
+  renderMascot(root.querySelector("#mascot-slot"), {
+    mood: "cheer",
+    size: 128,
+    outfit: adventure ? adventure.adventure.theme : null,
+  });
 
   root.querySelector("#finish-title").textContent = isRescue ? "Day saved!" : "Well done!";
   root.querySelector("#finish-exercise-name").textContent = isRescue
@@ -78,6 +82,31 @@ export function renderFinish(root, nav, result) {
     badgeSection.classList.remove("hidden");
   } else {
     badgeSection.classList.add("hidden");
+  }
+
+  const adventureEl = root.querySelector("#adventure-update");
+  adventureEl.classList.toggle("hidden", !adventure);
+  if (adventure) {
+    const { adventure: story, steps, total, chapter, finished } = adventure;
+    root.querySelector("#adventure-update-title").textContent = finished
+      ? `🏆 Adventure complete: ${story.title}`
+      : `🗺️ ${story.title} · ${steps} of ${total} days`;
+    root.querySelector("#adventure-update-fill").style.width = `${(steps / total) * 100}%`;
+
+    const chapterEl = root.querySelector("#adventure-chapter");
+    chapterEl.classList.toggle("hidden", !chapter);
+    if (chapter) {
+      root.querySelector("#adventure-chapter-place").textContent = `${chapter.icon} ${chapter.place}`;
+      root.querySelector("#adventure-chapter-text").textContent = chapter.text;
+    }
+
+    const trophyEl = root.querySelector("#adventure-trophy");
+    trophyEl.classList.toggle("hidden", !finished);
+    if (finished) {
+      root.querySelector("#adventure-trophy-icon").textContent = story.badge.icon;
+      root.querySelector("#adventure-trophy-label").textContent = story.badge.label;
+      root.querySelector("#adventure-trophy-desc").textContent = story.badge.desc;
+    }
   }
 
   root.querySelector("#day1-tip").classList.toggle("hidden", !isFirstEver);

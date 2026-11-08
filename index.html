@@ -106,6 +106,12 @@
         <span class="badge-shelf-count">→</span>
       </button>
 
+      <button type="button" class="badge-shelf adventure-shelf" id="adventure-btn">
+        <span class="adventure-shelf-label">🗺️ Start an adventure</span>
+        <span class="badge-shelf-count">→</span>
+        <span class="adventure-shelf-bar hidden"><span class="adventure-shelf-fill"></span></span>
+      </button>
+
       <button type="button" class="text-btn library-link" id="library-btn">Browse exercise library →</button>
     </div>
   </template>
@@ -214,6 +220,43 @@
     </div>
   </template>
 
+  <template id="tpl-adventure">
+    <header class="topbar">
+      <button class="icon-btn back-btn" aria-label="Back"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288 480 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-370.7 0 105.4-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></button>
+      <h1>Adventure</h1>
+    </header>
+    <div class="adventure-scroll" id="adventure-body"></div>
+  </template>
+
+  <template id="tpl-adventure-confirm">
+    <div class="sheet confirm-sheet">
+      <h2 class="confirm-title"></h2>
+      <p class="confirm-message adventure-confirm-intro"></p>
+      <p class="confirm-message adventure-confirm-note"></p>
+      <div class="form-actions">
+        <button type="button" class="text-btn secondary cancel-btn">Not now</button>
+        <button type="button" class="text-btn primary confirm-btn">Begin</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-adventure-import">
+    <div class="sheet">
+      <header class="sheet-header">
+        <h2>Import adventure</h2>
+        <button class="icon-btn close-btn" aria-label="Close"><svg class="icon" viewBox="0 0 384 512" aria-hidden="true" focusable="false"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></svg></button>
+      </header>
+      <p class="confirm-message">Paste an adventure here, or choose a file. Made one with an AI? Paste its reply.</p>
+      <textarea class="adventure-import-text" rows="7" spellcheck="false" placeholder='{ "type": "work-it-daily-adventure", ... }'></textarea>
+      <input type="file" class="adventure-import-file hidden" accept=".json,application/json" />
+      <p class="import-message"></p>
+      <div class="form-actions">
+        <button type="button" class="text-btn secondary adventure-import-file-btn">Choose file</button>
+        <button type="button" class="text-btn primary adventure-import-btn">Import</button>
+      </div>
+    </div>
+  </template>
+
   <template id="tpl-level-chooser">
     <div class="sheet">
       <header class="sheet-header">
@@ -308,6 +351,11 @@
           <p>This app doesn't send push notifications — it's just a page, with no server behind it to trigger them. The most reliable way to protect your streak is to set up your own daily reminder outside the app:</p>
           <p><strong>iOS:</strong> add a recurring daily alert in Reminders or Calendar, or build a Shortcuts automation ("Time of Day" trigger → send a notification) for a nicer custom nudge.</p>
           <p><strong>Android:</strong> a daily Calendar event or a Google Assistant routine works the same way.</p>
+        </section>
+        <section>
+          <h3>Adventures</h3>
+          <p>Want a story to go with your streak? Tap <strong>🗺️ Start an adventure</strong> on the home screen and pick a length (7, 14 or 30 days) and a theme: fantasy, space or historical. Every day you complete, or save from the Calendar, takes you one step further along the map, with a short story snippet at each landmark and a unique trophy at the end. Your avatar even dresses for the part. Adventures run alongside your streak and never change it.</p>
+          <p>You can also make your own: download the template, or copy the AI prompt, fill it in (or let an AI write it) and import it. You can share your adventures as files too.</p>
         </section>
         <section>
           <h3>Weekly challenge</h3>
@@ -480,6 +528,21 @@
         <div id="badge-unlock-section" class="badge-unlock-section hidden">
           <p class="badge-unlock-title">Badge unlocked!</p>
           <div id="badge-unlock-list"></div>
+        </div>
+        <div id="adventure-update" class="adventure-update hidden">
+          <p class="adventure-update-title" id="adventure-update-title"></p>
+          <div class="adventure-update-bar"><span id="adventure-update-fill"></span></div>
+          <div id="adventure-chapter" class="adventure-chapter hidden">
+            <p class="adventure-chapter-place" id="adventure-chapter-place"></p>
+            <p class="adventure-chapter-text" id="adventure-chapter-text"></p>
+          </div>
+          <div id="adventure-trophy" class="badge-item unlocked adventure-trophy hidden">
+            <span class="badge-icon" id="adventure-trophy-icon">🏅</span>
+            <div class="badge-text">
+              <p class="badge-label" id="adventure-trophy-label"></p>
+              <p class="badge-desc" id="adventure-trophy-desc"></p>
+            </div>
+          </div>
         </div>
         <p id="day1-tip" class="day1-tip hidden">💡 <strong>Pro tip!</strong> Set up a daily reminder in your Calendar or Reminders app so you keep your streak going.</p>
         <div id="challenge-friend-section" class="challenge-friend-section hidden">
