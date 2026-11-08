@@ -1,4 +1,5 @@
-import { getProgress, getStreakAsOf, getLevel } from "./storage.js";
+import { getProgress, getStreakAsOf, getLevel, getAdventures, getActiveAdventure, getAdventureTrophies } from "./storage.js";
+import { THEMES, adventureSummaryLines } from "./adventures.js";
 import { getExercise } from "./exercises.js";
 import { DEFAULT_LEVEL, scaleAmount, RESCUE_PENALTY_MULTIPLIER, getLevelLabel } from "./levels.js";
 import { formatDate } from "./util.js";
@@ -27,8 +28,48 @@ export function buildDaySummaryText(dateKey) {
   lines.push(`${completion.swapped ? "🔄" : "💪"} ${exercise.name} · ${amountText}`);
   lines.push(`🎚️ ${getLevelLabel(level)}`);
   lines.push(`🔥 ${currentStreak} day streak`);
+  if (completion.adventure) {
+    // Stamped on the completion at the time, so this still reads right after
+    // the adventure has finished (or even been removed, in which case it's
+    // simply left out).
+    const adventure = getAdventures().find((a) => a.id === completion.adventure.adventureId);
+    if (adventure) lines.push(...adventureSummaryLines(adventure, completion.adventure.step));
+  }
   if (completion.rescued) lines.push("✅ Saved");
   return lines.join("\n");
+}
+
+// A ten-square bar, only ever full once the adventure is actually finished.
+function progressBar(steps, total) {
+  const filled = steps >= total ? 10 : Math.floor((steps / total) * 10);
+  return "🟩".repeat(filled) + "⬜".repeat(10 - filled);
+}
+
+// A share card for the adventure itself, not any one day: where you are on
+// the running adventure, and the trophies collected so far. Null when there's
+// nothing to show yet.
+export function buildAdventureSummaryText() {
+  const lines = [`Work It Daily — ${formatDate(Date.now())}`];
+
+  const active = getActiveAdventure();
+  if (active) {
+    const { adventure, steps, total, reached } = active;
+    const theme = THEMES.find((t) => t.id === adventure.theme) || THEMES[0];
+    lines.push(`${theme.icon} ${steps}/${total} ${adventure.title}`);
+    lines.push(progressBar(steps, total));
+    const latest = reached[reached.length - 1];
+    if (latest) lines.push(`${latest.icon} ${latest.place}`);
+  }
+
+  const trophies = getAdventureTrophies();
+  const all = getAdventures();
+  const earned = all.filter((a) => trophies.some((t) => t.adventureId === a.id));
+  if (earned.length > 0) {
+    lines.push(`🏆 ${earned.length}/${all.length} trophies`);
+    lines.push(earned.map((a) => a.badge.icon).join(" "));
+  }
+
+  return lines.length > 1 ? lines.join("\n") : null;
 }
 
 // Same idea as buildDaySummaryText, but for the optional weekly-challenge

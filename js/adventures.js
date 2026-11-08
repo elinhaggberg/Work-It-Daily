@@ -180,6 +180,16 @@ export const BUILT_IN_ADVENTURES = [
   },
 ];
 
+// The adventure lines of a share summary: how far along ("3/7 The Dragon's
+// Pass", led by the theme's emoji), and once the last step is done, the
+// trophy it earned. Used by the finish screen and every day's summary.
+export function adventureSummaryLines(adventure, step) {
+  const theme = THEMES.find((t) => t.id === adventure.theme) || THEMES[0];
+  const lines = [`${theme.icon} ${step}/${adventure.days} ${adventure.title}`];
+  if (step >= adventure.days) lines.push(`${adventure.badge.icon} ${adventure.badge.label}`);
+  return lines;
+}
+
 export function getBuiltInAdventure(id) {
   return BUILT_IN_ADVENTURES.find((a) => a.id === id) || null;
 }

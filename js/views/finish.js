@@ -6,6 +6,7 @@ import { BADGE_TIERS } from "../storage.js";
 import { getLevelLabel } from "../levels.js";
 import { shareText } from "../share.js";
 import { buildChallengeText } from "../challenge.js";
+import { adventureSummaryLines } from "../adventures.js";
 
 function tierIcon(badge) {
   return (BADGE_TIERS.find((t) => t.id === badge.tier) || BADGE_TIERS[0]).icon;
@@ -14,7 +15,7 @@ function tierIcon(badge) {
 // Wordle-style share card: a title line (app name + streak "score"), then
 // every following line leads with an emoji — no explanatory text needed to
 // read it at a glance.
-function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue, isRescue, rescueDateKey, swapped }) {
+function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, levelValue, isRescue, rescueDateKey, swapped, adventure }) {
   const amount = exercise.type === "timer" ? `${exercise.amount}s hold` : `${exercise.amount} reps`;
   const levelLabel = getLevelLabel(levelValue);
   const isNewRecord = progress.currentStreak === progress.longestStreak && progress.longestStreak > 1;
@@ -30,6 +31,7 @@ function buildSummaryText({ exercise, progress, newlyUnlocked, usedFreeze, level
   lines.push(`🔥 ${progress.currentStreak} day streak`);
   if (isNewRecord) lines.push("🏆 New Longest Streak!");
   if (usedFreeze) lines.push("❄️ Freeze Used");
+  if (adventure) lines.push(...adventureSummaryLines(adventure.adventure, adventure.steps));
   if (isRescue) lines.push("✅ Saved");
   for (const badge of newlyUnlocked) lines.push(`${tierIcon(badge)} ${badge.label}`);
   return lines.join("\n");

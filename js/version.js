@@ -2,9 +2,15 @@
 // change would be worth a returning user knowing about. today.js shows the
 // latest entry's notes once to anyone whose last-seen version doesn't match,
 // then never again until the next bump.
-export const APP_VERSION = "1.9.0";
+export const APP_VERSION = "1.9.1";
 
 export const CHANGELOG = [
+  {
+    version: "1.9.1",
+    notes: [
+      "Adventures now show up in your summaries: a line like \"🐉 3/7 The Dragon's Pass\" on each day's summary, plus the trophy once you finish. There's also a new Copy adventure summary button on the Adventure screen",
+    ],
+  },
   {
     version: "1.9.0",
     notes: [
